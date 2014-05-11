@@ -23,7 +23,7 @@ November  2013     V2.3
 
 //#include "SAM3X8E_EEFC.h"
 //#include "SAM3XA_Flash.h"
-//#include "Wire_DUE.h"
+//#include "joinclass.h"
 #endif
 #include "Alarms.h"
 #include "EEPROM.h"

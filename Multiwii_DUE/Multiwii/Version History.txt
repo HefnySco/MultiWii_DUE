@@ -1,0 +1,7 @@
+Version Control
+
+
+
+version 0.0.1.0: 
+Date:  11 May 2014
+Description: still under construction ... code compile, but not complete on DUE.

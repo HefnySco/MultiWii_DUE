@@ -27,7 +27,13 @@
 
 
 // Include Atmel CMSIS driver
+#ifdef __cplusplus
+extern "C"{
+#endif // __cplusplus 
 #include <include/twi.h>
+#ifdef __cplusplus
+}
+#endif // __cplusplus 
 
 #include "Stream.h"
 #include "variant.h"

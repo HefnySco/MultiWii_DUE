@@ -129,8 +129,8 @@
 #endif
 
 //M.Hefny
-#if defined (__CM3_REV)
-//#if defined (ARDUINO_ARCH_SAM)
+//#if defined (__CM3_REV)
+#if defined (ARDUINO_ARCH_SAM)
 	#define ARDUINO_DUE
 #endif
 

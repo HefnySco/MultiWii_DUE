@@ -333,6 +333,7 @@ void TwoWire::onService(void) {
 	}
 }
 
+
 #if WIRE_INTERFACES_COUNT > 0
 static void Wire_Init(void) {
 	pmc_enable_periph_clk(WIRE_INTERFACE_ID);

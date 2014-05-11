@@ -23,7 +23,7 @@
 #define SAM3X8E_EEFC_INCLUDED
 
 
-//#include "Arduino.h"
+#include "Arduino.h"
 
 
 class SAM3X8E_EEFC {

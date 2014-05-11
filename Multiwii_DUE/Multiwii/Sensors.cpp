@@ -3,14 +3,14 @@
 #include "def.h"
 #include "types.h"
 #include "MultiWii.h"
+#include "Sensors.h"
 #include "Alarms.h"
 #include "EEPROM.h"
 #include "IMU.h"
 #include "LCD.h"
 #include "Sensors.h"
-#if defined (ARDUINO_DUE)
-#include "Wire_DUE.h"
-#endif
+
+
 
 
 
@@ -200,7 +200,7 @@ void i2c_init(void) {
   TWBR = ((F_CPU / 400000) - 16) / 2;          // set the I2C clock rate to 400kHz
   TWCR = 1<<TWEN;                              // enable twi module, no interrupt
 #else
-  Wire.begin();
+   Wire.begin();
 #endif
 }
 
@@ -212,6 +212,7 @@ void i2c_rep_start(uint8_t address) {
   TWCR = (1<<TWINT) | (1<<TWEN);
   waitTransmissionI2C();                       // wail until transmission completed
 #else
+
 	if (address & 0x01)
 	{
 		//ToDo: needs cleaning ... here the length of required data is assumed to be less than 10
@@ -221,6 +222,7 @@ void i2c_rep_start(uint8_t address) {
 	{
 	  Wire.beginTransmission(address>>1);
 	}
+	
 #endif
 }
 
@@ -229,7 +231,7 @@ void i2c_stop(void) {
   TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
   //  while(TWCR & (1<<TWSTO));                // <- can produce a blocking state with some WMP clones
 #else
-  Wire.endTransmission();
+   Wire.endTransmission(); // ERROR
 #endif
 }
 
@@ -239,7 +241,7 @@ void i2c_write(uint8_t data ) {
   TWCR = (1<<TWINT) | (1<<TWEN);
   waitTransmissionI2C();
 #else
-  Wire.write(data);
+   Wire.write(data);
 #endif
 }
 
@@ -251,8 +253,8 @@ uint8_t r;
   r = TWDR;
   if (!ack) i2c_stop();
 #else
-	r = Wire.read();
-	if (!ack) Wire.endTransmission(ack);
+	 r = Wire.read();
+	 if (!ack) Wire.endTransmission(ack); //error
 #endif
   return r;
 }
@@ -295,17 +297,17 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
     *b++ = i2c_read(size > 0);
   }
 #else
-  Wire.beginTransmission (add);
-  Wire.write(reg);
-  Wire.endTransmission();
-  delayMicroseconds(5);
-  Wire.requestFrom (add,size);
-  while(Wire.available())    // slave may send less than requested
-  { 
-    *b++ = Wire.read();    // receive a byte as character
-  }
-  Wire.endTransmission();
-  
+
+   Wire.beginTransmission (add);
+   Wire.write(reg);
+   Wire.endTransmission(); // error
+   delayMicroseconds(5);
+   Wire.requestFrom (add,size);
+   while(Wire.available())    // slave may send less than requested
+   { 
+     *b++ = Wire.read();    // receive a byte as character
+   }
+   Wire.endTransmission();  // error
    
 #endif
 }
@@ -338,10 +340,10 @@ void i2c_writeReg(uint8_t add, uint8_t reg, uint8_t val) {
   i2c_write(val);        // value to write in register
   i2c_stop();
 #else
-  Wire.beginTransmission(add); 
-  Wire.write(reg);   		
-  Wire.write(val);
-  Wire.endTransmission();
+   Wire.beginTransmission(add); 
+   Wire.write(reg);   		
+   Wire.write(val);
+   Wire.endTransmission();
 #endif
 }
 

@@ -4,6 +4,8 @@
 #include "def.h"
 #if defined (ARDUINO_DUE)
 #define ARDUINO_ARCH_SAM
+#include "SAM3X8E_EEFC.h"
+#include "SAM3XA_Flash.h"
 #include "Flash.h"
 #else
 #include <avr/eeprom.h>

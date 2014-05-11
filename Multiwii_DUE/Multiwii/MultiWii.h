@@ -5,6 +5,9 @@
 
 #include "types.h"
 
+
+
+
 // default POSHOLD control gains
 #define POSHOLD_P              .11
 #define POSHOLD_I              0.0
@@ -25,6 +28,7 @@
 #define MAXCHECK 1900
 
 extern volatile unsigned long timer0_overflow_count;
+
 
 extern const char pidnames[];
 extern const char boxnames[];
@@ -199,6 +203,12 @@ extern int16_t lookupThrottleRC[11];
   extern int8_t  cosZ;
 #endif
 
+#ifdef __cplusplus
+extern "C"{
+#endif // __cplusplus 
 void annexCode();
+#ifdef __cplusplus
+}
+#endif // __cplusplus 
 
 #endif /* MULTIWII_H_ */

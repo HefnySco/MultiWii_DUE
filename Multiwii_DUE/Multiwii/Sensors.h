@@ -1,7 +1,6 @@
 #ifndef SENSORS_H_
 #define SENSORS_H_
 
-
 #if defined(MMA7455) || defined(MMA8451Q) || defined(ADXL345) || \
     defined(BMA180) || defined(BMA280) || defined(BMA020) || defined(NUNCHACK) || \
     defined(LIS3LV02) || defined(LSM303DLx_ACC) || defined(ADCACC) || \
@@ -30,11 +29,12 @@ void initSensors();
 void i2c_rep_start(uint8_t address);
 void i2c_write(uint8_t data );
 void i2c_stop(void);
-void i2c_write(uint8_t data );
+//void i2c_write(uint8_t data );
 void i2c_writeReg(uint8_t add, uint8_t reg, uint8_t val);
 uint8_t i2c_readReg(uint8_t add, uint8_t reg);
 uint8_t i2c_readAck();
 uint8_t i2c_readNak();
+uint8_t i2c_read(uint8_t );
 
 #if defined(MMA7455)
   #define ACC_1G 64

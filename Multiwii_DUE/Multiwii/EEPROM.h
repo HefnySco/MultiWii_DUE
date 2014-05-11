@@ -7,7 +7,7 @@
  void eeprom_write_byte (uint8_t *__p, uint8_t __value);
  void eeprom_write_word (uint16_t *__p, uint16_t __value);
  void eeprom_write_block (const void *__src, void *__dst, unsigned int __n);
- #endif
+#endif
 
 void readGlobalSet();
 bool readEEPROM();
@@ -17,5 +17,4 @@ void writeParams(uint8_t b);
 void LoadDefaults();
 void readPLog(void);
 void writePLog(void);
-
 #endif /* EEPROM_H_ */

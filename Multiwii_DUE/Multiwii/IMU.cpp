@@ -6,6 +6,8 @@
 #include "IMU.h"
 #include "Sensors.h"
 
+
+
 void getEstimatedAttitude();
 
 void computeIMU () {
@@ -21,12 +23,12 @@ void computeIMU () {
     annexCode();
     while((uint16_t)(micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
-    ACC_getADC();
+     ACC_getADC();
     getEstimatedAttitude(); // computation time must last less than one interleaving delay
     while((uint16_t)(micros()-timeInterleave)<INTERLEAVING_DELAY) ; //interleaving delay between 2 consecutive reads
     timeInterleave=micros();
     f.NUNCHUKDATA = 1;
-    while(f.NUNCHUKDATA) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
+     while(f.NUNCHUKDATA) ACC_getADC(); // For this interleaving reading, we must have a gyro update at this point (less delay)
 
     for (axis = 0; axis < 3; axis++) {
       // empirical, we take a weighted value of the current and the previous values
