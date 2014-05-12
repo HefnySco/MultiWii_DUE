@@ -230,7 +230,11 @@ void getEstimatedAttitude(){
 
   // unit: radian per bit, scaled by 2^16 for further multiplication
   // with a delta time of 3000 us, and GYRO scale of most gyros, scale = a little bit less than 1
+#if !defined (ARDUINO_DUE)
   scale = (currentT - previousT) * (GYRO_SCALE * 65536);
+#else
+  scale = (currentT - previousT) * (GYRO_SCALE * 65536);
+#endif
   previousT = currentT;
 
   // Initialization
@@ -242,7 +246,7 @@ void getEstimatedAttitude(){
     accMag   += mul(imu.accSmooth[axis] , imu.accSmooth[axis]);
     // unit: radian scaled by 2^16
     // imu.gyroADC[axis] is 14 bit long, the scale factor ensure deltaGyroAngle16[axis] is still 14 bit long
-    deltaGyroAngle16[axis] = imu.gyroADC[axis]  * scale;
+    deltaGyroAngle16[axis] = (imu.gyroADC[axis]  * scale);
   }
 
   // we rotate the intermediate 32 bit vector with the radian vector (deltaGyroAngle16), scaled by 2^16

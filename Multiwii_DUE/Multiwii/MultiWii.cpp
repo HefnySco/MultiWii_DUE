@@ -589,6 +589,15 @@ void setup() {
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
   initOutput();
+  /*////DUMMY START
+  int dum;
+  for (dum=0;dum<3;++dum)
+  {
+	global_conf.accZero[dum] = dum * 2 + 1;
+	global_conf.magZero[dum] = dum * 20 + 3;
+  }
+  writeGlobalSet(1);
+  ///DUMMY END*/
   readGlobalSet();
   #ifndef NO_FLASH_CHECK
     #if defined(MEGA)

@@ -10,3 +10,7 @@ Description: still under construction ... code compile, but not complete on DUE.
 version 0.0.1.1: 
 Date:  12 May 2014
 Description: still under construction ... code compile, EPROM is working now.
+
+version 0.0.1.2
+Date: 13 May 2014
+Description" still under construction.... solved a big issue in EEPROM related to paging.

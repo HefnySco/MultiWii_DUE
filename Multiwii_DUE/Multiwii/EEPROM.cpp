@@ -36,7 +36,7 @@ void eeprom_read_block (void *__dst, const void *__src, unsigned int __n)
 		//Serial.write(" - ");
 		//Serial.print(((char*)__src)[i],HEX);
 		//Serial.write ("\r\n");
-		//delayMicroseconds(200);
+		delayMicroseconds(200);
 		((char*)__dst)[i]= ((char*)__src)[i];
 	}
 
@@ -57,16 +57,16 @@ void eeprom_write_block ( void *__src, void *__dst, unsigned int __n)
 	Flash.begin();
 	//Write the flash memory with the content of the tempBuffer
 	bool result =  Flash.writeData(__src, __n, __dst);
-    /*
+   
 	if (result)
 	{
-	Serial.println("Saved");
+	//Serial.println("Saved");
 	}
 	else
 	{
-	Serial.println("failed");
+	//Serial.println("failed");
 	}
-	*/
+	
 }
 
 #endif
@@ -100,6 +100,7 @@ void readGlobalSet() {
     global_conf.currentSet = 0;
     global_conf.accZero[ROLL] = 5000;    // for config error signalization
 	//Serial.println("Error readGlobalSet");
+	
   }
 }
  
@@ -111,8 +112,8 @@ bool readEEPROM() {
     global_conf.currentSet=0;
   #endif
 #if defined (ARDUINO_DUE)
-  eeprom_read_block((void*)&conf, (void*)(pFlash_conf), sizeof(conf));
-  //Serial.println("Read Flash_Conf");
+   //Serial.println("Read Flash_Conf");
+   eeprom_read_block((void*)&conf, (void*)(pFlash_conf), sizeof(conf));
 #else
   eeprom_read_block((void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
 #endif
@@ -120,15 +121,15 @@ bool readEEPROM() {
     //Serial.println("Error Flash_Conf");
 	//Serial.write ("chksum");
     //Serial.println ((uint8_t)(conf.checksum),HEX);
-	while (debug_write)
+	/*while (debug_write)
 	{
-	}
+		
+	}*/
 	blinkLED(6,100,3);    
     #if defined(BUZZER)
       alarmArray[7] = 3;
     #endif
     LoadDefaults();                 // force load defaults 
-	
     return false;                   // defaults loaded, don't reload constants (EEPROM life saving)
   }
   // 500/128 = 3.90625    3.9062 * 3.9062 = 15.259   1526*100/128 = 1192
@@ -157,12 +158,14 @@ bool readEEPROM() {
 }
 
 void writeGlobalSet(uint8_t b) {
-  global_conf.checksum = calculate_sum((uint8_t*)&global_conf, sizeof(global_conf));
+  global_conf.checksum = (uint8_t) calculate_sum((uint8_t*)&global_conf, sizeof(global_conf));
 #if defined (ARDUINO_DUE)
-  eeprom_write_block(( void*)&global_conf, (void*)pFlashglobal_conf, sizeof(global_conf));
+  //Serial.println("writeGlobalSet");
+  eeprom_write_block((void*)&global_conf, (void*)pFlashglobal_conf, sizeof(global_conf));
 #else
   eeprom_write_block((const void*)&global_conf, (void*)0, sizeof(global_conf));
 #endif
+
   if (b == 1) blinkLED(15,20,1);
   #if defined(BUZZER)
     alarmArray[7] = 1; 
@@ -178,11 +181,12 @@ void writeParams(uint8_t b) {
   #endif
   conf.checksum = (uint8_t) calculate_sum((uint8_t*)&conf, sizeof(conf));
  #if defined (ARDUINO_DUE)
-  eeprom_write_block((void*)&conf, (void*)(pFlash_conf + global_conf.currentSet * sizeof(conf)), sizeof(conf));
-  debug_write = true;
-  #else
+ //Serial.println("writeParams");
+ eeprom_write_block((void*)&conf, (void*)(pFlash_conf + global_conf.currentSet * sizeof(conf)), sizeof(conf));
+ #else
   eeprom_write_block((const void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
-#endif
+ #endif
+  debug_write = true; 
   readEEPROM();
   if (b == 1) blinkLED(15,20,1);
   #if defined(BUZZER)

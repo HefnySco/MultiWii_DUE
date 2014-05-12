@@ -42,55 +42,54 @@ boolean SAM3XA_Flash::writePage(void *data, const void *flash)
 boolean SAM3XA_Flash::writeData(void *data, uint32_t len, const void *_flash)
 {
 	const uint8_t *flash = reinterpret_cast<const uint8_t *>(_flash);
-	const uint8_t *end; // formula has been moved down...as len can be updated
-	//Serial.println("I am here");
+	const uint8_t *end = flash + len;
+	Serial.println("I am here");
 	
 	while (true) {
 		int i;
 		for (i=0; eefcs[i]!=NULL; i++)
 			if (eefcs[i]->containsAddress(flash))
 			{
-				//Serial.println("Address Found");
+				Serial.println("Address Found");
 				break;
 			}
 		// No flash controllers found for the requested area
 		if (eefcs[i]==NULL)
 		{
-			//Serial.println("NO FLASH CTRL");
+			Serial.println("NO FLASH CTRL");
 			return false;
 		}
 		
 		// M.Hefny: align length by taking extra unnecessary bytes.
 		if (!eefcs[i]->isAligned(len))
 		{
-			//Serial.println("updating length");
-			//Serial.println(len);
-			//if (len < 50)
-			//{
+			Serial.println("updating length");
+			Serial.println(len);
+			if (len < 50)
+			{
 				len = len + (0x4- (len & 0x03)); 	// Global Works		 
-			//}
-			//else
-			//{
-			//	len = len + (0x3 - eefcs[i]->isAligned(len));   /// Config Works
-			//}
+			}
+			else
+			{
+				len = len + (0x3 - eefcs[i]->isAligned(len));   /// Config Works
+			}
 					
-			//Serial.println(len);
+			Serial.println(len);
 		}
-                end = flash + len; // new location.
 		
 		if (eefcs[i]->containsAddress(end)) {
   			// Write last block
-			 //Serial.println((int)data,HEX);
-			 //Serial.println(len);
-			 //Serial.println((int)flash,HEX);
-			 //Serial.println((int)end,HEX);
+			 Serial.println((int)data,HEX);
+			 Serial.println(len);
+			 Serial.println((int)flash,HEX);
+			 Serial.println((int)end,HEX);
 			return eefcs[i]->writeData(data, len, flash);
 		}
-		//Serial.println("Path 2");
+		Serial.println("Path 2");
 		uint8_t *stop = reinterpret_cast<uint8_t *>(eefcs[i]->getEndAddress());
 		uint32_t size = stop - flash;
 		boolean res = eefcs[i]->writeData(data, size, flash);
-		////Serial.println("Path 2-2");
+		//Serial.println("Path 2-2");
 		if (!res)
 			return false;
 		data += size;

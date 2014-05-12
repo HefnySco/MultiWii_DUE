@@ -282,7 +282,8 @@ void waitTransmissionI2C() {
     }
   }
   #else
-  
+  // FIX: Pls write proper code here
+  i2c_errors_count++;
   #endif
 }
 
@@ -303,7 +304,7 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
    Wire.beginTransmission (add);
    Wire.write(reg);
    Wire.endTransmission(); // error
-   delayMicroseconds(5);
+   //delayMicroseconds(5);
    Wire.requestFrom (add,size);
    while(Wire.available())    // slave may send less than requested
    { 

@@ -110,7 +110,7 @@ private:
 	TwoWireStatus status;
 
 	// TWI clock frequency
-	static const uint32_t TWI_CLOCK = 100000;
+	static const uint32_t TWI_CLOCK = I2C_SPEED;
 
 	// Timeouts (
 	static const uint32_t RECV_TIMEOUT = 100000;
