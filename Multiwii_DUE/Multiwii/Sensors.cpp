@@ -3,7 +3,9 @@
 #include "def.h"
 #include "types.h"
 #include "MultiWii.h"
-#include "Sensors.h"
+#if defined (ARDUINO_DUE)
+#include "Wire_DUE.h" 
+#endif
 #include "Alarms.h"
 #include "EEPROM.h"
 #include "IMU.h"

@@ -43,7 +43,7 @@ boolean SAM3XA_Flash::writeData(void *data, uint32_t len, const void *_flash)
 {
 	const uint8_t *flash = reinterpret_cast<const uint8_t *>(_flash);
 	const uint8_t *end = flash + len;
-	Serial.println("I am here");
+	//Serial.println("I am here");
 	
 	while (true) {
 		int i;
@@ -54,22 +54,32 @@ boolean SAM3XA_Flash::writeData(void *data, uint32_t len, const void *_flash)
 		// No flash controllers found for the requested area
 		if (eefcs[i]==NULL)
 		{
-			 Serial.println("NO FLASH CTRL");
+			 //Serial.println("NO FLASH CTRL");
 			return false;
+		}
+		
+		// M.Hefny: align length by taking extra unnecessary bytes.
+		if (!eefcs[i]->isAligned(len))
+		{
+			//Serial.println("updating length");
+			//Serial.println(len);
+			len = len + (0x3 - eefcs[i]->isAligned(len)); 
+			//Serial.println(len);
 		}
 		
 		if (eefcs[i]->containsAddress(end)) {
   			// Write last block
-			 Serial.println((int)data,HEX);
-			 Serial.println(len);
-			 Serial.println((int)flash,HEX);
-			 Serial.println((int)end,HEX);
+			 //Serial.println((int)data,HEX);
+			 //Serial.println(len);
+			 //Serial.println((int)flash,HEX);
+			 //Serial.println((int)end,HEX);
 			return eefcs[i]->writeData(data, len, flash);
 		}
-
+		//Serial.println("Path 2");
 		uint8_t *stop = reinterpret_cast<uint8_t *>(eefcs[i]->getEndAddress());
 		uint32_t size = stop - flash;
 		boolean res = eefcs[i]->writeData(data, size, flash);
+		//Serial.println("Path 2-2");
 		if (!res)
 			return false;
 		data += size;

@@ -41,8 +41,8 @@ void SAM3X8E_EEFC::begin()
 	getDescriptor(buff, 8);
 	size = buff[1];
 	pageSize = buff[2];
-	//Serial.print ("Page size:");
-	//Serial.println(pageSize,HEX);
+	Serial.print ("Page size:");
+	Serial.println(pageSize,HEX);
 	// Set Flash Wait State to 6
 	// (SAM3X bug, see datasheet errata for details)
 	setFlashWaitStates(6);
@@ -103,14 +103,7 @@ boolean SAM3X8E_EEFC::writeData(void *data, uint32_t len, const void *_flash)
 		return false;
 	}
 
-	// M.Hefny: align length by taking extra unnecessary bytes.
-	if (!isAligned(len))
-	{
-		Serial.println("updating length");
-		Serial.println(len);
-		len = len + (0x3 - isAligned(len)); 
-		Serial.println(len);
-	}
+	
 	// 32-bit Align check
 	if (!isAligned(flash) || !isAligned(data) || !isAligned(len)) {
 		hasInternalError = true;

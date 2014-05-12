@@ -16,23 +16,31 @@
 #include "Alarms.h"
 #include "GPS.h"
 
-
+bool debug_write = false;
 #if defined (ARDUINO_DUE)
 
 // Storage Buffer
-const char Flashglobal_conf[sizeof(global_conf)] = { 0 };
-const char *pFlashglobal_conf = Flashglobal_conf;
-const char  EMPTY_BUFFER [16] = {0};
-const char Flash_conf[sizeof(conf)*4] = { 0 };
-const char *pFlash_conf = Flash_conf;
+const uint8_t Flashglobal_conf[sizeof(global_conf)+32] = { 0 };   //32 extra free space for padding as safe guard for the next data flash data, as len is updated to be multiple of 4 when saving. i.e. if length 14 it becomes 16
+const uint8_t *pFlashglobal_conf = Flashglobal_conf;
+const uint8_t Flash_conf[sizeof(conf)*4 + 16] = { 0 };
+const uint8_t *pFlash_conf = Flash_conf;
 void eeprom_read_block (void *__dst, const void *__src, unsigned int __n)
 {
 	int i=0;
-	for (i=0;i<__n; ++i)
+	char before,after;
+	for (i=0;i<__n; i++)
 	{
+		//Serial.print(i);
+		//Serial.write(" : ");
+		//Serial.print(((char*)__dst)[i],HEX);
+		//Serial.write(" - ");
+		//Serial.print(((char*)__src)[i],HEX);
+		//Serial.write ("\r\n");
+		//delayMicroseconds(200);
 		((char*)__dst)[i]= ((char*)__src)[i];
 	}
-}
+
+} 
 
 void eeprom_write_byte (uint8_t *__p, uint8_t __value)
 {
@@ -49,7 +57,8 @@ void eeprom_write_block ( void *__src, void *__dst, unsigned int __n)
 	Flash.begin();
 	//Write the flash memory with the content of the tempBuffer
 	bool result =  Flash.writeData(__src, __n, __dst);
-    if (result)
+    /*
+	if (result)
 	{
 	Serial.println("Saved");
 	}
@@ -57,6 +66,7 @@ void eeprom_write_block ( void *__src, void *__dst, unsigned int __n)
 	{
 	Serial.println("failed");
 	}
+	*/
 }
 
 #endif
@@ -65,20 +75,31 @@ void LoadDefaults(void);
 
 uint8_t calculate_sum(uint8_t *cb , uint8_t siz) {
   uint8_t sum=0x55;  // checksum init
+ #if defined (ARDUINO_DUE)
+	// HACK
+	// Arduino DUE seems to be read the chksum as well 
+	// and the --siz does not work.
+	// after checking the issue I found that the check sum is doubled 
+	// which means it is added. that is why this condition is added
+	siz = siz -1;
+#endif
   while(--siz) sum += *cb++;  // calculate checksum (without checksum byte)
+  //Serial.write ("chksum");
+  //Serial.println (sum,HEX);
   return sum;
 }
 
 void readGlobalSet() {
 #if defined (ARDUINO_DUE)
   eeprom_read_block((void*)&global_conf, (void*)pFlashglobal_conf, sizeof(global_conf));
-  Serial.println("Read global_conf");
+  //Serial.println("Read global_conf");
 #else
   eeprom_read_block((void*)&global_conf, (void*)0, sizeof(global_conf));
 #endif
-  if(calculate_sum((uint8_t*)&global_conf, sizeof(global_conf)) != global_conf.checksum) {
+  if((uint8_t)calculate_sum((uint8_t*)&global_conf, sizeof(global_conf)) != (uint8_t)(global_conf.checksum)) {
     global_conf.currentSet = 0;
     global_conf.accZero[ROLL] = 5000;    // for config error signalization
+	//Serial.println("Error readGlobalSet");
   }
 }
  
@@ -91,16 +112,23 @@ bool readEEPROM() {
   #endif
 #if defined (ARDUINO_DUE)
   eeprom_read_block((void*)&conf, (void*)(pFlash_conf), sizeof(conf));
-  Serial.println("Read Flash_Conf");
+  //Serial.println("Read Flash_Conf");
 #else
   eeprom_read_block((void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
 #endif
-  if(calculate_sum((uint8_t*)&conf, sizeof(conf)) != conf.checksum) {
-    blinkLED(6,100,3);    
+  if((uint8_t)calculate_sum((uint8_t*)&conf, sizeof(conf)) != (uint8_t)(conf.checksum)) {
+    //Serial.println("Error Flash_Conf");
+	//Serial.write ("chksum");
+    //Serial.println ((uint8_t)(conf.checksum),HEX);
+	while (debug_write)
+	{
+	}
+	blinkLED(6,100,3);    
     #if defined(BUZZER)
       alarmArray[7] = 3;
     #endif
     LoadDefaults();                 // force load defaults 
+	
     return false;                   // defaults loaded, don't reload constants (EEPROM life saving)
   }
   // 500/128 = 3.90625    3.9062 * 3.9062 = 15.259   1526*100/128 = 1192
@@ -148,9 +176,10 @@ void writeParams(uint8_t b) {
   #else
     global_conf.currentSet=0;
   #endif
-  conf.checksum = calculate_sum((uint8_t*)&conf, sizeof(conf));
+  conf.checksum = (uint8_t) calculate_sum((uint8_t*)&conf, sizeof(conf));
  #if defined (ARDUINO_DUE)
-  eeprom_write_block((void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + pFlash_conf), sizeof(conf));
+  eeprom_write_block((void*)&conf, (void*)(pFlash_conf + global_conf.currentSet * sizeof(conf)), sizeof(conf));
+  debug_write = true;
   #else
   eeprom_write_block((const void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
 #endif

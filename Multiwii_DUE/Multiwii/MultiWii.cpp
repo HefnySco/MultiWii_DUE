@@ -18,7 +18,6 @@ November  2013     V2.3
 
 #include "types.h"
 #include "MultiWii.h"
-#include "types.h"
 #if defined (ARDUINO_DUE)
 
 //#include "SAM3X8E_EEFC.h"
