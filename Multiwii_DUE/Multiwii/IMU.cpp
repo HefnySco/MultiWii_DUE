@@ -197,7 +197,7 @@ int32_t  __attribute__ ((noinline)) mul(int16_t a, int16_t b) {
 #if !defined (ARDUINO_DUE)
   MultiS16X16to32(r, a, b);
 #else
-  r = (int32_t)a*b; //without asm requirement
+  r = (int32_t)((int32_t)a*(int32_t)b); //without asm requirement
 #endif
   return r;
 }
@@ -230,11 +230,7 @@ void getEstimatedAttitude(){
 
   // unit: radian per bit, scaled by 2^16 for further multiplication
   // with a delta time of 3000 us, and GYRO scale of most gyros, scale = a little bit less than 1
-#if !defined (ARDUINO_DUE)
   scale = (currentT - previousT) * (GYRO_SCALE * 65536);
-#else
-  scale = (currentT - previousT) * (GYRO_SCALE * 65536);
-#endif
   previousT = currentT;
 
   // Initialization

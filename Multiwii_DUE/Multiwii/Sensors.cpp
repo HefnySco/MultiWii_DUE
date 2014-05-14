@@ -303,11 +303,12 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
 
    Wire.beginTransmission (add);
    Wire.write(reg);
-   Wire.endTransmission(); // error
+   //Wire.endTransmission(); // error
    //delayMicroseconds(5);
    Wire.requestFrom (add,size);
-   while(Wire.available())    // slave may send less than requested
+   while(Wire.available() && size)    // slave may send less than requested
    { 
+	 size--;	
      *b++ = Wire.read();    // receive a byte as character
    }
    Wire.endTransmission();  // error
@@ -888,9 +889,9 @@ void ACC_init () {
 void ACC_getADC () {
   i2c_getSixRawADC(ADXL345_ADDRESS,0x32);
 
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,
-                   ((rawADC[3]<<8) | rawADC[2]) ,
-                   ((rawADC[5]<<8) | rawADC[4]) );
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0]) ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2]) ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4]) );
   ACC_Common();
 }
 #endif
@@ -1101,9 +1102,9 @@ void Gyro_init() {
 void Gyro_getADC () {
   i2c_getSixRawADC(L3G4200D_ADDRESS,0x80|0x28);
 
-  GYRO_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>2  ,
-                    ((rawADC[3]<<8) | rawADC[2])>>2  ,
-                    ((rawADC[5]<<8) | rawADC[4])>>2  );
+  GYRO_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t) rawADC[0])>>2  ,
+                    ((int16_t)(rawADC[3]<<8) | (int16_t) rawADC[2])>>2  ,
+                    ((int16_t)(rawADC[5]<<8) | (int16_t) rawADC[4])>>2  );
   GYRO_Common();
 }
 #endif
@@ -1227,9 +1228,9 @@ uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
   #if !defined(MPU6050_I2C_AUX_MASTER)
     void Device_Mag_getADC() {
       i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
-      MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
-                       ((rawADC[2]<<8) | rawADC[3]) ,     
-                       ((rawADC[4]<<8) | rawADC[5]) );
+      MAG_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1]) ,          
+                       ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3]) ,     
+                       ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5]) );
     }
   #endif
 #endif
@@ -1367,14 +1368,14 @@ void Mag_init() {
 void getADC() {
   i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
   #if defined(HMC5843)
-    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                     ((rawADC[2]<<8) | rawADC[3]) ,
-                     ((rawADC[4]<<8) | rawADC[5]) );
+    MAG_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1]) ,
+                     ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3]) ,
+                     ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5]) );
   #endif
   #if defined (HMC5883)  
-    MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                     ((rawADC[4]<<8) | rawADC[5]) ,
-                     ((rawADC[2]<<8) | rawADC[3]) );
+    MAG_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1]) ,
+                     ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5]) ,
+                     ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3]) );
   #endif
 }
 
@@ -1404,9 +1405,9 @@ void Device_Mag_getADC() {
 
   void Device_Mag_getADC() {
     i2c_getSixRawADC(MAG_ADDRESS,MAG_DATA_REGISTER);
-    MAG_ORIENTATION( ((rawADC[1]<<8) | rawADC[0]) ,          
-                     ((rawADC[3]<<8) | rawADC[2]) ,     
-                     ((rawADC[5]<<8) | rawADC[4]) );
+    MAG_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0]) ,          
+                     ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2]) ,     
+                     ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4]) );
     //Start another meassurement
     i2c_writeReg(MAG_ADDRESS,0x0a,0x01);
   }
@@ -1431,9 +1432,9 @@ void Gyro_init() {
 
 void Gyro_getADC () {
   i2c_getSixRawADC(MPU6050_ADDRESS, 0x43);
-  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
-                    ((rawADC[2]<<8) | rawADC[3])>>2 ,
-                    ((rawADC[4]<<8) | rawADC[5])>>2 );
+  GYRO_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
+                    ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3])>>2 ,
+                    ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5])>>2 );
   GYRO_Common();
 }
 
@@ -1456,9 +1457,9 @@ void ACC_init () {
 
 void ACC_getADC () {
   i2c_getSixRawADC(MPU6050_ADDRESS, 0x3B);
-  ACC_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>3 ,
-                   ((rawADC[2]<<8) | rawADC[3])>>3 ,
-                   ((rawADC[4]<<8) | rawADC[5])>>3 );
+  ACC_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1])>>3 ,
+                   ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3])>>3 ,
+                   ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5])>>3 );
   ACC_Common();
 }
 
@@ -1467,19 +1468,19 @@ void ACC_getADC () {
     void Device_Mag_getADC() {
       i2c_getSixRawADC(MPU6050_ADDRESS, 0x49);               //0x49 is the first memory room for EXT_SENS_DATA
       #if defined(HMC5843)
-        MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                         ((rawADC[2]<<8) | rawADC[3]) ,
-                         ((rawADC[4]<<8) | rawADC[5]) );
+        MAG_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1]) ,
+                         ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3]) ,
+                         ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5]) );
       #endif
       #if defined (HMC5883)  
-        MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,
-                         ((rawADC[4]<<8) | rawADC[5]) ,
-                         ((rawADC[2]<<8) | rawADC[3]) );
+        MAG_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1]) ,
+                         ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5]) ,
+                         ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3]) );
       #endif
       #if defined (MAG3110)
-        MAG_ORIENTATION( ((rawADC[0]<<8) | rawADC[1]) ,          
-                         ((rawADC[2]<<8) | rawADC[3]) ,     
-                         ((rawADC[4]<<8) | rawADC[5]) );
+        MAG_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1]) ,          
+                         ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3]) ,     
+                         ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5]) );
       #endif
     }
   #endif
@@ -1519,9 +1520,9 @@ void ACC_init () {
   void ACC_getADC () {
   i2c_getSixRawADC(LSM330_ACC_ADDRESS,0x80|0x28);// Start multiple read at reg 0x28
 
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>ACC_DELIMITER ,
-                   ((rawADC[3]<<8) | rawADC[2])>>ACC_DELIMITER ,
-                   ((rawADC[5]<<8) | rawADC[4])>>ACC_DELIMITER );
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])>>ACC_DELIMITER ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])>>ACC_DELIMITER ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])>>ACC_DELIMITER );
   ACC_Common();
 }
 ////////////////////////////////////
@@ -1543,9 +1544,9 @@ void Gyro_init() {
 void Gyro_getADC () {
   i2c_getSixRawADC(LSM330_GYRO_ADDRESS,0x80|0x28);
 
-  GYRO_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>2  ,
-                    ((rawADC[3]<<8) | rawADC[2])>>2  ,
-                    ((rawADC[5]<<8) | rawADC[4])>>2  );
+  GYRO_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])>>2  ,
+                    ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])>>2  ,
+                    ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])>>2  );
   GYRO_Common();
 }
 ////////////////////////////////////
@@ -1572,9 +1573,9 @@ void Gyro_init() {
 
 void Gyro_getADC () {
   i2c_getSixRawADC(MPU3050_ADDRESS, 0x1D);
-  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
-                    ((rawADC[2]<<8) | rawADC[3])>>2 ,
-                    ((rawADC[4]<<8) | rawADC[5])>>2 );
+  GYRO_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
+                    ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3])>>2 ,
+                    ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5])>>2 );
   GYRO_Common();
 }
 
@@ -1614,9 +1615,9 @@ void Gyro_getADC() {
   // Wii Motion Plus Data
   if ( (rawADC[5]&0x03) == 0x02 ) {
     // Assemble 14bit data 
-    imu.gyroADC[ROLL]  = - ( ((rawADC[5]>>2)<<8) | rawADC[2] ); //range: +/- 8192
-    imu.gyroADC[PITCH] = - ( ((rawADC[4]>>2)<<8) | rawADC[1] );
-    imu.gyroADC[YAW]  =  - ( ((rawADC[3]>>2)<<8) | rawADC[0] );
+    imu.gyroADC[ROLL]  = - ( ((int16_t)(rawADC[5]>>2)<<8) | (int16_t)rawADC[2] ); //range: +/- 8192
+    imu.gyroADC[PITCH] = - ( ((int16_t)(rawADC[4]>>2)<<8) | (int16_t)rawADC[1] );
+    imu.gyroADC[YAW]  =  - ( ((int16_t)(rawADC[3]>>2)<<8) | (int16_t)rawADC[0] );
     GYRO_Common();
     // Check if slow bit is set and normalize to fast mode range
     imu.gyroADC[ROLL]  = (rawADC[3]&0x01)     ? imu.gyroADC[ROLL]/5  : imu.gyroADC[ROLL];  //the ratio 1/5 is not exactly the IDG600 or ISZ650 specification 

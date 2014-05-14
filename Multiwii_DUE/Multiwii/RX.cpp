@@ -10,11 +10,13 @@
 /**************************************************************************************/
 /***************             Global RX related variables           ********************/
 /**************************************************************************************/
-
-#if defined(SPEKTRUM)
+#if defined(SPEKTRUM) 
+#if !defined (ARDUINO_DUE)
   #include <wiring.c>  //Auto-included by the Arduino core... but we need it sooner. 
+#else
+  #include "Wire_DUE.h"	
 #endif
-
+#endif
 //RAW RC values will be store here
 #if defined(SBUS)
   volatile uint16_t rcValue[RC_CHANS] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; // interval [1000;2000]
@@ -31,23 +33,13 @@ volatile int PPMch = 255;
 volatile int PPMlast=0;
 volatile int pwmLast[8];
 
-void pwmHandler(int ch, int pin) {
-  int cv = micros(); //= TC0->TC_CHANNEL[1].TC_CV;
-  if (digitalRead(pin)) {
-    pwmLast[ch] = cv;
-  } else {
-    cv = (cv - pwmLast[ch]); // / 42;
-    if (cv>900 && cv<2200) {
-      rcValue[ch] = cv;
-    }
-  }
-}
+void pwmHandler(int ch, int pin);
 
-void ch1Handler() { pwmHandler(1, CHAN1PIN); }
-void ch2Handler() { pwmHandler(2, CHAN2PIN); }
-void ch3Handler() { pwmHandler(3, CHAN3PIN); }
-void ch4Handler() { pwmHandler(4, CHAN4PIN); }
-void ch5Handler() { pwmHandler(5, CHAN5PIN); }
+void ch1Handler();
+void ch2Handler();
+void ch3Handler();
+void ch4Handler();
+void ch5Handler();
 //void ch6Handler() { pwmHandler(6, CHAN6PIN); }
 //void ch7Handler() { pwmHandler(7, CHAN7PIN); } //not used at the moment
 //void ch8Handler() { pwmHandler(8, CHAN8PIN); } //not used at the moment
@@ -124,10 +116,10 @@ void configureReceiver() {
     #endif
     
 #if defined (ARDUINO_DUE)
-  //pmc_enable_periph_clk(ID_TC1);
+   pmc_enable_periph_clk(ID_TC1);
   // use timer just for timing reference
-  // TC_Configure(TC0, 1, TC_CMR_TCCLKS_TIMER_CLOCK1);
-  // TC_Start(TC0,1);
+   TC_Configure(TC0, 1, TC_CMR_TCCLKS_TIMER_CLOCK1);
+   TC_Start(TC0,1);
    attachInterrupt(CHAN1PIN,ch1Handler,CHANGE);
    attachInterrupt(CHAN2PIN,ch2Handler,CHANGE);
    attachInterrupt(CHAN3PIN,ch3Handler,CHANGE);
@@ -247,7 +239,23 @@ void configureReceiver() {
 #endif
 #if defined (ARDUINO_DUE)
     // Arduino Due RX
-  
+  void pwmHandler(int ch, int pin) {
+  int cv = micros(); //= TC0->TC_CHANNEL[1].TC_CV;
+  if (digitalRead(pin)) {
+    pwmLast[ch] = cv;
+  } else {
+    cv = (cv - pwmLast[ch]); // / 42;
+    if (cv>900 && cv<2200) {
+      rcValue[ch] = cv;
+    }
+  }
+}
+
+void ch1Handler() { pwmHandler(0, CHAN1PIN); }
+void ch2Handler() { pwmHandler(1, CHAN2PIN); }
+void ch3Handler() { pwmHandler(2, CHAN3PIN); }
+void ch4Handler() { pwmHandler(3, CHAN4PIN); }
+void ch5Handler() { pwmHandler(4, CHAN5PIN); }
 #endif
   /*********************      atmega328P's Aux2 Pins      *************************/
   #if defined(PROMINI)
