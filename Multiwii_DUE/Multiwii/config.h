@@ -34,8 +34,8 @@
   /**************************    The type of multicopter    ****************************/
     //#define GIMBAL
     //#define BI
-    //#define TRI
-    #define QUADP
+    #define TRI
+    //#define QUADP
     //#define QUADX
     //#define Y4
     //#define Y6

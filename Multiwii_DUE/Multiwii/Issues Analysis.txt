@@ -1,0 +1,17 @@
+1- Gyro Calibration
+symp: only negative values are read.
+
+cause:
+	1- Zero seems to be OK as with no motion zero is read.
+
+
+2- Gyro reads large values only.
+symp: Gyro 
+
+cause:
+	1- bytes read from I2C is inverted due to different library.
+		however ACC & MAG seems to be OK.
+	2- Bad Gyro initialization due to different I2C or timing issue.
+	
+		
+	

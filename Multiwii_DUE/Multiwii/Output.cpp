@@ -5,7 +5,21 @@
 #include "MultiWii.h"
 #include "Alarms.h"
 
+#if defined (ARDUINO_DUE)
+
+//#if defined (USE_400HZ_ESC)
+#define PWM_DUE_PERIOD 2500   // in us
+//#else
+//  #define PWM_PERIOD 3300   // in us
+//#endif  
+
+#define PWM_DUE_SERVO_PERIOD 20000   // in us
+
+#endif
+
 void initializeSoftPWM(void);
+
+
 
 #if defined(SERVO)
 void initializeServo();
@@ -140,7 +154,6 @@ void initializeServo();
 /***************   Writes the Servos values to the needed format   ********************/
 /**************************************************************************************/
 void writeServos() {
-#if !defined (ARDUINO_DUE)
   #if defined(SERVO)
     #if defined(PRI_SERVO_FROM) && !defined(HW_PWM_SERVOS)   // write primary servos
       for(uint8_t i = (PRI_SERVO_FROM-1); i < PRI_SERVO_TO; i++){
@@ -222,10 +235,34 @@ void writeServos() {
         OCR1C = servo[3];// Pin 11
       #endif
     #endif
+  
+	#if defined (ARDUINO_DUE) && defined (MEGA_HW_PWM_SERVOS)
+	  #if (PRI_SERVO_FROM == 1 || SEC_SERVO_FROM == 1) 
+        
+	  #endif 
+      #if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+        
+      #endif 
+      #if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+       // PWMC_SetDutyCycle(PWM, 6, servo[0]);
+      #endif 
+      #if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+      PWMC_SetDutyCycle(PWM, 3, servo[3]);
+      #endif 
+      #if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
+       // PWMC_SetDutyCycle(PWM, 6, servo[0]);
+      #endif 
+      #if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
+      PWMC_SetDutyCycle(PWM, 2, servo[5]);
+      #endif 
+      #if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
+       // PWMC_SetDutyCycle(PWM, 6, servo[0]);
+      #endif 
+      #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
+       // PWMC_SetDutyCycle(PWM, 6, servo[0]);
+      #endif
+    #endif
   #endif
-#else
-
-#endif
 }
 
 /**************************************************************************************/
@@ -489,8 +526,29 @@ void writeMotors() { // [1000;2000] => [125;250]
       atomicPWM_PIN12_lowState  = 245-atomicPWM_PIN12_highState;
     #endif
   #endif
-  #if defined (ARDUINO_DUE)  
+  
+ #if defined (ARDUINO_DUE)  
+  #if (NUMBER_MOTOR > 0)
+    PWMC_SetDutyCycle(PWM, 0, motor[0]);
   #endif
+  #if (NUMBER_MOTOR > 1)
+    PWMC_SetDutyCycle(PWM, 1, motor[1]);
+  #endif
+  #if (NUMBER_MOTOR > 2)
+    PWMC_SetDutyCycle(PWM, 2, motor[2]); 
+  #endif
+  #if (NUMBER_MOTOR > 3)
+    PWMC_SetDutyCycle(PWM, 3, motor[3]);
+  #endif
+  #if (NUMBER_MOTOR > 4)
+    PWMC_SetDutyCycle(PWM, 4, motor[4]);
+    PWMC_SetDutyCycle(PWM, 5, motor[5]);
+  #endif
+  #if  (NUMBER_MOTOR >6) 
+    PWMC_SetDutyCycle(PWM, 6, motor[6]);
+    PWMC_SetDutyCycle(PWM, 7, motor[7]);    
+  #endif
+ #endif
 }
 
 /**************************************************************************************/
@@ -506,6 +564,42 @@ void writeAllMotors(int16_t mc) {   // Sends commands to all motors
 /**************************************************************************************/
 /************        Initialize the PWM Timers and Registers         ******************/
 /**************************************************************************************/
+
+#if defined (ARDUINO_DUE)
+void commandAllMotors(int command) {
+  PWMC_SetDutyCycle(PWM, 0, command);
+  PWMC_SetDutyCycle(PWM, 1, command);
+  PWMC_SetDutyCycle(PWM, 2, command);
+  PWMC_SetDutyCycle(PWM, 3, command);
+#if (NUMBER_MOTOR == 6) || (NUMBER_MOTOR == 8) 
+      PWMC_SetDutyCycle(PWM, 4, command);
+      PWMC_SetDutyCycle(PWM, 5, command);
+#endif
+
+#if  (NUMBER_MOTOR == 8) 
+      PWMC_SetDutyCycle(PWM, 6, command);
+      PWMC_SetDutyCycle(PWM, 7, command);
+#endif
+}
+
+static void setPWMpin(uint32_t pin) {
+  PIO_Configure(g_APinDescription[pin].pPort,
+                PIO_PERIPH_B, //hack Arduino does not allow high PWM by default
+                g_APinDescription[pin].ulPin,
+                g_APinDescription[pin].ulPinConfiguration);
+}
+
+static void configOneMotor(uint8_t ch, uint32_t period) {
+  PWMC_ConfigureChannel(PWM, ch, PWM_CMR_CPRE_CLKA, 0, 0);
+  PWMC_SetPeriod(PWM, ch, period);
+  PWMC_SetDutyCycle(PWM, ch, MINCOMMAND);
+  PWMC_EnableChannel(PWM, ch);
+}
+
+#endif
+
+
+
 void initOutput() {
 #if !defined (ARDUINO_DUE)
   /****************            mark all PWM pins as Output             ******************/
@@ -514,7 +608,7 @@ void initOutput() {
   }
     
 #else
-  
+ 
 #endif
 
   /****************  Specific PWM Timers & Registers for the MEGA's    ******************/
@@ -685,7 +779,65 @@ void initOutput() {
   #endif
 
   #if defined (ARDUINO_DUE)
+   /* Thanks to https://github.com/fluentart/drone2 */
+  #if (NUMBER_MOTOR > 0)
+   setPWMpin(34); //PWM L0
+   PWMC_DisableChannel(PWM, 0);
   #endif
+  #if (NUMBER_MOTOR > 1)
+   setPWMpin(36); //PWM L1
+   PWMC_DisableChannel(PWM, 1);
+  #endif
+  #if (NUMBER_MOTOR > 2)
+   setPWMpin(38); //PWM L2
+   PWMC_DisableChannel(PWM, 2);
+  #endif
+  #if (NUMBER_MOTOR > 3)
+   setPWMpin(40); //PWM L3 
+   PWMC_DisableChannel(PWM, 3);
+  #endif
+  #if (NUMBER_MOTOR > 4)
+   setPWMpin(9);  //PWM L4 
+   setPWMpin(8);  //PWM L5
+   PWMC_DisableChannel(PWM, 4);
+   PWMC_DisableChannel(PWM, 5);
+  #endif
+  #if (NUMBER_MOTOR > 6) 
+    setPWMpin(7);  //PWM L6 
+    setPWMpin(6);  //PWM L7 
+    PWMC_DisableChannel(PWM, 6);
+    PWMC_DisableChannel(PWM, 7);
+  #endif
+  
+  pmc_enable_periph_clk(ID_PWM);
+
+  // set PWM clock A to 1MHz
+  PWMC_ConfigureClocks(1000000,0,VARIANT_MCK);
+
+  #if (NUMBER_MOTOR > 6) 
+    configOneMotor(7, PWM_DUE_PERIOD);
+    configOneMotor(6, PWM_DUE_PERIOD);
+ #endif
+ 
+ #if (NUMBER_MOTOR >4) 
+    configOneMotor(5, PWM_DUE_PERIOD);
+    configOneMotor(4, PWM_DUE_PERIOD);
+ #endif
+
+ #if (NUMBER_MOTOR >3) 
+  configOneMotor(3, PWM_DUE_PERIOD);  
+ #endif
+ #if (NUMBER_MOTOR >2) 
+ configOneMotor(2, PWM_DUE_PERIOD);
+ #endif
+ #if (NUMBER_MOTOR >1) 
+  configOneMotor(1, PWM_DUE_PERIOD);
+ #endif
+ #if (NUMBER_MOTOR >0) 
+  configOneMotor(0, PWM_DUE_PERIOD);
+ #endif
+
+ #endif
   
   /********  special version of MultiWii to calibrate all attached ESCs ************/
   #if defined(ESC_CALIB_CANNOT_FLY)
@@ -717,6 +869,7 @@ void initOutput() {
 /************                Initialize the PWM Servos               ******************/
 /**************************************************************************************/
 void initializeServo() {
+  #if !defined (ARDUINO_DUE)	
   #if !defined(HW_PWM_SERVOS)
   // do pins init
     #if (PRI_SERVO_FROM == 1) || (SEC_SERVO_FROM == 1)
@@ -743,6 +896,9 @@ void initializeServo() {
     #if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
       SERVO_8_PINMODE;
     #endif
+  #endif
+  #else
+   // Arduino Init
   #endif
 
   #if defined(SERVO_1_HIGH)
@@ -898,6 +1054,98 @@ void initializeServo() {
     ICR1   = SERVO_TOP_VAL;      // set TOP timer 1
     ICR3   = SERVO_PIN5_TOP_VAL; // set TOP timer 3
   #endif // promicro hw pwm
+  
+
+  #if defined (ARDUINO_DUE) && defined (MEGA_HW_PWM_SERVOS)
+   
+   #if defined(SERVO_RFR_RATE)
+      #if (SERVO_RFR_RATE < 20)
+        #define PWM_DUE_SERVO_PERIOD 20000
+      #endif
+      #if (SERVO_RFR_RATE > 400)
+        #define PWM_DUE_SERVO_PERIOD 2500
+      #endif
+    #else
+      #if defined(SERVO_RFR_50HZ)
+        #define PWM_DUE_SERVO_PERIOD 20000
+      #elif defined(SERVO_RFR_160HZ)
+        #define PWM_DUE_SERVO_PERIOD 6250
+      #elif defined(SERVO_RFR_300HZ)
+        #define PWM_DUE_SERVO_PERIOD 3333
+      #endif
+    #endif  
+
+  /* Thanks to https://github.com/fluentart/drone2 */
+  
+   
+	#if (PRI_SERVO_TO >= 1) || (SEC_SERVO_TO >= 1)
+		#if (PRI_SERVO_FROM == 1 || SEC_SERVO_FROM == 1) 
+		
+		#endif
+		#if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+		
+		#endif
+		#if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+		#endif
+    #endif
+    #if (PRI_SERVO_TO >= 4) || (SEC_SERVO_TO >= 4) 
+		#if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+		// same pin of 4th motor for quad .... I am following multiwii manual.
+		setPWMpin(40); //PWM L3 
+		PWMC_DisableChannel(PWM, 3);
+		#endif
+		#if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
+		#endif
+    #endif
+    #if (PRI_SERVO_TO >= 6) || (SEC_SERVO_TO >= 6) 
+		#if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
+		// third motor in Tri .... I am following multiwii manual.
+		setPWMpin(38); //PWM L2
+		PWMC_DisableChannel(PWM, 2);
+		#endif
+		#if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
+		#endif
+		#if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
+			#if defined(AIRPLANE) || defined(HELICOPTER)
+			#endif  
+		#endif
+    #endif 
+	pmc_enable_periph_clk(ID_PWM);
+	  // set PWM clock A to 1MHz
+    PWMC_ConfigureClocks(1000000,0,VARIANT_MCK);
+
+	
+	#if (PRI_SERVO_TO >= 1) || (SEC_SERVO_TO >= 1)
+		#if (PRI_SERVO_FROM == 1 || SEC_SERVO_FROM == 1) 
+		#endif
+		#if (PRI_SERVO_FROM <= 2 && PRI_SERVO_TO >= 2) || (SEC_SERVO_FROM <= 2 && SEC_SERVO_TO >= 2) 
+		#endif
+		#if (PRI_SERVO_FROM <= 3 && PRI_SERVO_TO >= 3) || (SEC_SERVO_FROM <= 3 && SEC_SERVO_TO >= 3) 
+		#endif
+    #endif
+    #if (PRI_SERVO_TO >= 4) || (SEC_SERVO_TO >= 4) 
+		#if (PRI_SERVO_FROM <= 4 && PRI_SERVO_TO >= 4) || (SEC_SERVO_FROM <= 4 && SEC_SERVO_TO >= 4) 
+		configOneMotor(3, PWM_DUE_SERVO_PERIOD); 
+		#endif
+		#if (PRI_SERVO_FROM <= 5 && PRI_SERVO_TO >= 5) || (SEC_SERVO_FROM <= 5 && SEC_SERVO_TO >= 5) 
+		#endif
+    #endif
+    #if (PRI_SERVO_TO >= 6) || (SEC_SERVO_TO >= 6) 
+		#if (PRI_SERVO_FROM <= 6 && PRI_SERVO_TO >= 6) || (SEC_SERVO_FROM <= 6 && SEC_SERVO_TO >= 6) 
+		configOneMotor(2, PWM_DUE_SERVO_PERIOD); 
+		#endif
+		#if (PRI_SERVO_FROM <= 7 && PRI_SERVO_TO >= 7) || (SEC_SERVO_FROM <= 7 && SEC_SERVO_TO >= 7) 
+		#endif
+		#if (PRI_SERVO_FROM <= 8 && PRI_SERVO_TO >= 8) || (SEC_SERVO_FROM <= 8 && SEC_SERVO_TO >= 8) 
+			#if defined(AIRPLANE) || defined(HELICOPTER)
+			#endif  
+		#endif
+    #endif 
+
+  
+  #endif // DUE hw pwm
+  
+  #endif
 }
 
 /**************************************************************************************/
@@ -910,6 +1158,8 @@ void initializeServo() {
 
 // for servo 2-8
 // its almost the same as for servo 1
+
+#if !defined (ARDUINO_DUE)
 #if defined(SERVO_1_HIGH) && !defined(A32U4_4_HW_PWM_SERVOS)
   #define SERVO_PULSE(PIN_HIGH,ACT_STATE,SERVO_NUM,LAST_PIN_LOW) \
     }else if(state == ACT_STATE){                                \
@@ -1044,6 +1294,7 @@ void initializeServo() {
   /****************               Motor SW PWM ISR's                 ******************/
   // hexa with old but sometimes better SW PWM method
   // for setups without servos
+  #if !defined (ARDUINO_DUE)
   #if (NUMBER_MOTOR == 6) && (!defined(SERVO) && !defined(HWPWM6))
     ISR(SOFT_PWM_ISR1) { 
       static uint8_t state = 0;
@@ -1128,6 +1379,9 @@ void initializeServo() {
         }
       }
     #endif
+  #endif
+  #else
+  //Arduino DUE
   #endif
 #endif
 
@@ -1527,7 +1781,7 @@ void mixTable() {
       servo[3] = servo[0];    // copy CamPitch value to propper output servo for A0_A1_PIN_HEX
       servo[4] = servo[1];    // copy CamRoll  value to propper output servo for A0_A1_PIN_HEX
     #endif
-    #if defined(TRI) && defined(MEGA_HW_PWM_SERVOS) && defined(MEGA)
+    #if defined(TRI) && defined(MEGA_HW_PWM_SERVOS) && ( defined(MEGA) || defined (ARDUINO_DUE))
       servo[5] = constrain(servo[5], conf.servoConf[5].min, conf.servoConf[5].max); // servo[5] is still use by gui for this config (more genereic)
       servo[3] = servo[5];    // copy TRI serwo value to propper output servo for MEGA_HW_PWM_SERVOS
     #endif

@@ -27,6 +27,8 @@
 #endif
 
 #if defined (ARDUINO_DUE)
+/* Thanks to https://github.com/fluentart/drone2 */
+
 volatile int PPMt[16]; // unvalidated input
 
 volatile int PPMch = 255;
