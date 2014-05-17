@@ -29,6 +29,8 @@
 #if defined (ARDUINO_DUE)
 /* Thanks to https://github.com/fluentart/drone2 */
 
+volatile bool INT_busy = false;
+volatile bool INT_BLOCK = false;
 volatile int PPMt[16]; // unvalidated input
 
 volatile int PPMch = 255;
@@ -248,7 +250,10 @@ void configureReceiver() {
   } else {
     cv = (cv - pwmLast[ch]); // / 42;
     if (cv>900 && cv<2200) {
+	  while (INT_BLOCK);
+	  INT_busy = true;
       rcValue[ch] = cv;
+	  INT_busy = false;
     }
   }
 }
@@ -469,10 +474,15 @@ uint16_t readRawRC(uint8_t chan) {
     uint8_t oldSREG;
     oldSREG = SREG; 
 	cli(); // Let's disable interrupts
+#else
+	while (INT_busy);
+	INT_BLOCK = true;
 #endif
     data = rcValue[rcChannel[chan]]; // Let's copy the data Atomically
 #if !defined (ARDUINO_DUE)
     SREG = oldSREG;        // Let's restore interrupt state
+#else
+	INT_BLOCK = false;	
 #endif
 	#endif
   return data; // We return the value correctly copied when the IRQ's where disabled

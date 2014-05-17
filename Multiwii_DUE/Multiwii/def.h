@@ -136,6 +136,7 @@
 
 
 #if defined (ARDUINO_DUE)
+
 // check pgmspace.h in avr .... they are not  used in STM
 #undef PROGMEM
 #define PROGMEM 	

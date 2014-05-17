@@ -222,7 +222,7 @@ void i2c_rep_start(uint8_t address) {
 	}
 	else
 	{
-	  Wire.beginTransmission(address>>1);
+	  Wire.beginTransmission((uint8_t) (address>>1));
 	}
 	
 #endif
@@ -233,7 +233,7 @@ void i2c_stop(void) {
   TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO);
   //  while(TWCR & (1<<TWSTO));                // <- can produce a blocking state with some WMP clones
 #else
-   Wire.endTransmission(); // ERROR
+   Wire.endTransmission(true); // ERROR
 #endif
 }
 
@@ -301,17 +301,17 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
   }
 #else
 
-   Wire.beginTransmission (add);
+   Wire.beginTransmission ((uint8_t) add);
    Wire.write(reg);
    //Wire.endTransmission(); // error
    //delayMicroseconds(5);
-   Wire.requestFrom (add,size);
+   Wire.requestFrom (add,size,true);
    while(Wire.available() && size)    // slave may send less than requested
    { 
 	 size--;	
      *b++ = Wire.read();    // receive a byte as character
    }
-   Wire.endTransmission();  // error
+   Wire.endTransmission(true);  // error
    
 #endif
 }
@@ -344,10 +344,10 @@ void i2c_writeReg(uint8_t add, uint8_t reg, uint8_t val) {
   i2c_write(val);        // value to write in register
   i2c_stop();
 #else
-   Wire.beginTransmission(add); 
+   Wire.beginTransmission((uint8_t) add); 
    Wire.write(reg);   		
    Wire.write(val);
-   Wire.endTransmission();
+   Wire.endTransmission(true);
 #endif
 }
 

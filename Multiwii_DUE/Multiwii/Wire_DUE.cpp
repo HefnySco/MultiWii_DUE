@@ -28,6 +28,7 @@ extern "C" {
 
 #include "Wire_DUE.h"
 
+
 static inline bool TWI_FailedAcknowledge(Twi *pTwi) {
 	return pTwi->TWI_SR & TWI_SR_NACK;
 }

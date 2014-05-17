@@ -26,3 +26,10 @@ version 0.0.1.4
 Date: 16 May 2014
 Description: still under construction... Quad & TRI configuration is working now :)
 known issue: The Gyro factor GYR_CMPF_FACTOR has to be 2 for proper reading, which suggest another data conversion issue. The first issue in gyro was in the raw data and has been solved by adding strong typing integer16 in casting.
+
+
+version 0.0.1.5
+Date: 17 May 2014
+Description: still under construction... Quad & TRI configuration is working now :)
+known issue: The Gyro factor GYR_CMPF_FACTOR has to be 2 for proper reading, which suggest another data conversion issue. The first issue in gyro was in the raw data and has been solved by adding strong typing integer16 in casting.
+enhancement: calling wire_due has been optimized by data types to avoid unnecessary intermediate functions. execution time is no 1.4ms rather than 4+ms

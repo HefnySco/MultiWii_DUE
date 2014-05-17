@@ -40,8 +40,22 @@ extern "C"{
 
 #define BUFFER_LENGTH 32
 
+extern "C"
+{
+static inline bool TWI_FailedAcknowledge(Twi *pTwi);
+static inline bool TWI_WaitTransferComplete(Twi *_twi, uint32_t _timeout);
+static inline bool TWI_WaitByteSent(Twi *_twi, uint32_t _timeout) ;
+static inline bool TWI_WaitByteReceived(Twi *_twi, uint32_t _timeout);
+}
+
 class TwoWire : public Stream {
 public:
+	///////M.hefny
+	Twi *twi;
+	static const uint32_t RECV_TIMEOUT = 100000;
+	static const uint32_t XMIT_TIMEOUT = 100000;
+	///////////////
+	
 	TwoWire(Twi *twi, void(*begin_cb)(void));
 	void begin();
 	void begin(uint8_t);
@@ -95,7 +109,8 @@ private:
 	void (*onBeginCallback)(void);
 
 	// TWI instance
-	Twi *twi;
+	// M.Hefny: moved to public
+	// Twi *twi;
 
 	// TWI state
 	enum TwoWireStatus {
@@ -113,8 +128,9 @@ private:
 	static const uint32_t TWI_CLOCK = I2C_SPEED;
 
 	// Timeouts (
-	static const uint32_t RECV_TIMEOUT = 100000;
-	static const uint32_t XMIT_TIMEOUT = 100000;
+	// MHefny: moved global
+	//static const uint32_t RECV_TIMEOUT = 100000;
+	//static const uint32_t XMIT_TIMEOUT = 100000;
 };
 
 #if WIRE_INTERFACES_COUNT > 0
