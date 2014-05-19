@@ -218,7 +218,7 @@ void i2c_rep_start(uint8_t address) {
 	if (address & 0x01)
 	{
 		//ToDo: needs cleaning ... here the length of required data is assumed to be less than 10
-		Wire.requestFrom(address >>1 ,10,false);
+		Wire.requestFrom((uint8_t)(address >>1) ,(uint8_t)10,(uint8_t)false);
 	}
 	else
 	{
@@ -305,7 +305,7 @@ void i2c_read_reg_to_buf(uint8_t add, uint8_t reg, uint8_t *buf, uint8_t size) {
    Wire.write(reg);
    //Wire.endTransmission(); // error
    //delayMicroseconds(5);
-   Wire.requestFrom (add,size,true);
+   Wire.requestFrom ((uint8_t)add,(uint8_t)size,(uint8_t)true);
    while(Wire.available() && size)    // slave may send less than requested
    { 
 	 size--;	
@@ -554,13 +554,13 @@ void ACC_Common() {
 #if defined(BMP085)
 #define BMP085_ADDRESS 0x77
 
-static struct {
+static struct __attribute__ ((packed)) {
   // sensor registers from the BOSCH BMP085 datasheet
   int16_t  ac1, ac2, ac3;
   uint16_t ac4, ac5, ac6;
   int16_t  b1, b2, mb, mc, md;
-  union {uint16_t val; uint8_t raw[2]; } ut; //uncompensated T
-  union {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
+  union __attribute__ ((packed)) {uint16_t val; uint8_t raw[2]; } ut; //uncompensated T
+  union __attribute__ ((packed)) {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
   uint8_t  state;
   uint32_t deadline;
 } bmp085_ctx;  
@@ -690,11 +690,11 @@ uint8_t Baro_update() {                   // first UT conversion is started in i
 
 #define OSR MS561101BA_OSR_4096
 
-static struct {
+static struct __attribute__ ((packed)) {
   // sensor registers from the MS561101BA datasheet
   uint16_t c[7];
-  union {uint32_t val; uint8_t raw[4]; } ut; //uncompensated T
-  union {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
+  union __attribute__ ((packed)) {uint32_t val; uint8_t raw[4]; } ut; //uncompensated T
+  union __attribute__ ((packed)) {uint32_t val; uint8_t raw[4]; } up; //uncompensated P
   uint8_t  state;
   uint16_t deadline;
 } ms561101ba_ctx;
@@ -704,7 +704,7 @@ void i2c_MS561101BA_reset(){
 }
 
 void i2c_MS561101BA_readCalibration(){
-  union {uint16_t val; uint8_t raw[2]; } data;
+  union __attribute__ ((packed)) {uint16_t val; uint8_t raw[2]; } data;
   for(uint8_t i=0;i<6;i++) {
     i2c_rep_start(MS561101BA_ADDRESS<<1);
     i2c_write(0xA2+2*i);
@@ -761,14 +761,14 @@ void i2c_MS561101BA_UT_Read() {
   ms561101ba_ctx.ut.raw[0] = i2c_readNak();
 }
 
-// use float approximation instead of int64_t intermediate values
+// use FLOAT approximation instead of int64_t intermediate values
 // does not use 2nd order compensation under -15 deg
 void i2c_MS561101BA_Calculate() {
   int32_t delt;
 
-  float dT       = (int32_t)ms561101ba_ctx.ut.val - (int32_t)((uint32_t)ms561101ba_ctx.c[5] << 8);
-  float off      = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) /((uint32_t)1<<7));
-  float sens     = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) /((uint32_t)1<<8));
+  FLOAT dT       = (int32_t)ms561101ba_ctx.ut.val - (int32_t)((uint32_t)ms561101ba_ctx.c[5] << 8);
+  FLOAT off      = ((uint32_t)ms561101ba_ctx.c[2] <<16) + ((dT * ms561101ba_ctx.c[4]) /((uint32_t)1<<7));
+  FLOAT sens     = ((uint32_t)ms561101ba_ctx.c[1] <<15) + ((dT * ms561101ba_ctx.c[3]) /((uint32_t)1<<8));
   baroTemperature  = (dT * ms561101ba_ctx.c[6])/((uint32_t)1<<23);
 
   if (baroTemperature < 0) { // temperature lower than 20st.C 
@@ -833,9 +833,9 @@ void ACC_init () {
 void ACC_getADC () {
   i2c_getSixRawADC(MMA7455_ADDRESS,0x00);
 
-  ACC_ORIENTATION( ((int8_t(rawADC[1])<<8) | int8_t(rawADC[0])) ,
-                   ((int8_t(rawADC[3])<<8) | int8_t(rawADC[2])) ,
-                   ((int8_t(rawADC[5])<<8) | int8_t(rawADC[4])) );
+  ACC_ORIENTATION( (int16_t)((rawADC[1])<<8) | (int16_t)(rawADC[0])) ,
+                   (int16_t)((rawADC[3])<<8) | (int16_t)(rawADC[2])) ,
+                   (int16_t)((rawADC[5])<<8) | (int16_t)(rawADC[4])) );
   ACC_Common();
 }
 #endif
@@ -860,9 +860,9 @@ void ACC_init () {
 void ACC_getADC () {
   i2c_getSixRawADC(MMA8451Q_ADDRESS,0x00);
 
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])/32 ,
-                   ((rawADC[3]<<8) | rawADC[2])/32 ,
-                   ((rawADC[5]<<8) | rawADC[4])/32);
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])/32 ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])/32 ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])/32);
   ACC_Common();
 }
 #endif
@@ -939,9 +939,9 @@ void ACC_init () {
 void ACC_getADC () {
   i2c_getSixRawADC(BMA180_ADDRESS,0x02);
   //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>4 ,
-                   ((rawADC[3]<<8) | rawADC[2])>>4 ,
-                   ((rawADC[5]<<8) | rawADC[4])>>4 );
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])>>4 ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])>>4 ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])>>4 );
   ACC_Common();
 }
 #endif
@@ -960,9 +960,9 @@ void ACC_init () {
 void ACC_getADC () {
   i2c_getSixRawADC(BMA280_ADDRESS,0x02);
   //usefull info is on the 14 bits  [2-15] bits  /4 => [0-13] bits  /4 => 12 bit resolution
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>4 ,
-                   ((rawADC[3]<<8) | rawADC[2])>>4 ,
-                   ((rawADC[5]<<8) | rawADC[4])>>4 );
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])>>4 ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])>>4 ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])>>4 );
   ACC_Common();
 }
 #endif
@@ -995,9 +995,9 @@ void ACC_init(){
 
 void ACC_getADC(){
   i2c_getSixRawADC(0x38,0x02);
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>6 ,
-                   ((rawADC[3]<<8) | rawADC[2])>>6 ,
-                   ((rawADC[5]<<8) | rawADC[4])>>6 );
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])>>6 ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])>>6 ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])>>6 );
   ACC_Common();
 }
 #endif
@@ -1019,9 +1019,9 @@ void ACC_getADC() {
   i2c_getSixRawADC(NUNCHACK_ADDRESS,0x00);
   TWBR = ((F_CPU / 400000) - 16) / 2; // change the I2C clock rate. !! you must check if the nunchuk is ok with this freq
 
-  ACC_ORIENTATION(  ( (rawADC[3]<<2)        + ((rawADC[5]>>4)&0x2) ) ,
-                  - ( (rawADC[2]<<2)        + ((rawADC[5]>>3)&0x2) ) ,
-                    ( ((rawADC[4]&0xFE)<<2) + ((rawADC[5]>>5)&0x6) ));
+  ACC_ORIENTATION(  ( (int16_t)(rawADC[3]<<2)        + ((int16_t)(rawADC[5]>>4)&0x2) ) ,
+                  - ( (int16_t)(rawADC[2]<<2)        + ((int16_t)(rawADC[5]>>3)&0x2) ) ,
+                    ( (int16_t)((rawADC[4]&0xFE)<<2) + ((int16_t)(rawADC[5]>>5)&0x6) ));
   ACC_Common();
 }
 #endif
@@ -1039,9 +1039,9 @@ void ACC_init(){
 
 void ACC_getADC(){
   i2c_getSixRawADC(LIS3A,0x28+0x80);
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>2 ,
-                   ((rawADC[3]<<8) | rawADC[2])>>2 ,
-                   ((rawADC[5]<<8) | rawADC[4])>>2);
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])>>2 ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])>>2 ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])>>2);
   ACC_Common();
 }
 #endif
@@ -1060,9 +1060,9 @@ void ACC_init () {
   void ACC_getADC () {
   i2c_getSixRawADC(0x18,0xA8);
 
-  ACC_ORIENTATION( ((rawADC[1]<<8) | rawADC[0])>>4 ,
-                   ((rawADC[3]<<8) | rawADC[2])>>4 ,
-                   ((rawADC[5]<<8) | rawADC[4])>>4 );
+  ACC_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t)rawADC[0])>>4 ,
+                   ((int16_t)(rawADC[3]<<8) | (int16_t)rawADC[2])>>4 ,
+                   ((int16_t)(rawADC[5]<<8) | (int16_t)rawADC[4])>>4 );
   ACC_Common();
 }
 #endif
@@ -1101,10 +1101,10 @@ void Gyro_init() {
 
 void Gyro_getADC () {
   i2c_getSixRawADC(L3G4200D_ADDRESS,0x80|0x28);
-
-  GYRO_ORIENTATION( ((int16_t)(rawADC[1]<<8) | (int16_t) rawADC[0])>>2  ,
-                    ((int16_t)(rawADC[3]<<8) | (int16_t) rawADC[2])>>2  ,
-                    ((int16_t)(rawADC[5]<<8) | (int16_t) rawADC[4])>>2  );
+  
+  GYRO_ORIENTATION( (((int16_t)(rawADC[1]<<8)) |  (int16_t)rawADC[0])>>2  ,
+                    (((int16_t)(rawADC[3]<<8)) |  (int16_t)rawADC[2])>>2  ,
+                    (((int16_t)(rawADC[5]<<8)) |  (int16_t)rawADC[4])>>2  );
   GYRO_Common();
 }
 #endif
@@ -1135,9 +1135,9 @@ void Gyro_init() {
 
 void Gyro_getADC () {
   i2c_getSixRawADC(ITG3200_ADDRESS,0X1D);
-  GYRO_ORIENTATION( ((rawADC[0]<<8) | rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
-                    ((rawADC[2]<<8) | rawADC[3])>>2 ,
-                    ((rawADC[4]<<8) | rawADC[5])>>2 );
+  GYRO_ORIENTATION( ((int16_t)(rawADC[0]<<8) | (int16_t)rawADC[1])>>2 , // range: +/- 8192; +/- 2000 deg/sec
+                    ((int16_t)(rawADC[2]<<8) | (int16_t)rawADC[3])>>2 ,
+                    ((int16_t)(rawADC[4]<<8) | (int16_t)rawADC[5])>>2 );
   GYRO_Common();
 }
 #endif
@@ -1147,7 +1147,7 @@ void Gyro_getADC () {
 // I2C Compass common function
 // ************************************************************************************************************
 #if MAG
-static float   magGain[3] = {1.0,1.0,1.0};  // gain for each axis, populated at sensor init
+static FLOAT   magGain[3] = {1.0,1.0,1.0};  // gain for each axis, populated at sensor init
 static uint8_t magInit = 0;
 
 uint8_t Mag_getADC() { // return 1 when news values are available, 0 otherwise
@@ -1626,9 +1626,9 @@ void Gyro_getADC() {
     f.NUNCHUKDATA = 0;
   #if defined(NUNCHUCK)
     } else if ( (rawADC[5]&0x03) == 0x00 ) { // Nunchuk Data
-      ACC_ORIENTATION(  ( (rawADC[3]<<2)      | ((rawADC[5]>>4)&0x02) ) ,
-                      - ( (rawADC[2]<<2)      | ((rawADC[5]>>3)&0x02) ) ,
-                        ( ((rawADC[4]>>1)<<3) | ((rawADC[5]>>5)&0x06) ) );
+      ACC_ORIENTATION(  ( (int16_t)(rawADC[3]<<2)      | ((int16_t)(rawADC[5]>>4)&0x02) ) ,
+                      - ( ((int16_t)rawADC[2]<<2)      | ((int16_t)(rawADC[5]>>3)&0x02) ) ,
+                        ( (int16_t)((int16_t)(rawADC[4]>>1)<<3) | ((int16_t)(rawADC[5]>>5)&0x06) ) );
       ACC_Common();
       f.NUNCHUKDATA = 1;
   #endif
@@ -1688,7 +1688,7 @@ void Gyro_getADC() {
 #define SRF08_ECHO_RANGE     2
 
 
-static struct {
+static struct __attribute__ ((packed)) {
   // sensor registers from the MS561101BA datasheet
   int32_t  range[SRF08_MAX_SENSORS];
   int8_t   sensors;              // the number of sensors present

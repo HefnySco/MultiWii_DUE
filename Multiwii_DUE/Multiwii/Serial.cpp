@@ -23,6 +23,7 @@ static uint8_t serialBufferTX[TX_BUFFER_SIZE][UART_NUMBER];
 #endif
 
 #if defined(ARDUINO_DUE)
+
   unsigned char T_USB_Available(uint8_t port){
     int n ;
 	switch (port)
@@ -33,6 +34,18 @@ static uint8_t serialBufferTX[TX_BUFFER_SIZE][UART_NUMBER];
 		case 3: n= Serial3.available(); break;
 	}
     if (n > 255) n = 255;
+    return n;
+  }
+  
+   unsigned char T_USB_Write(uint8_t port, uint8_t uc_data){
+    int n ;
+	switch (port)
+	{
+	    case 0: n= Serial.write(uc_data); break;
+		case 1: n= Serial1.write(uc_data); break;
+		case 2: n= Serial2.write(uc_data); break;
+		case 3: n= Serial3.write(uc_data); break;
+	}
     return n;
   }
 #endif
@@ -117,16 +130,12 @@ void UartSendData(uint8_t port) {
     }
   #endif
   #if defined(ARDUINO_DUE) 
-     switch (port) {
-       case 0:
-         while(serialHeadTX[0] != serialTailTX[0]) {
-            if (++serialTailTX[0] >= TX_BUFFER_SIZE) serialTailTX[0] = 0;
-            Serial.write(serialBufferTX[serialTailTX[0]],1);
+     while(serialHeadTX[port] != serialTailTX[port]) {
+            if (++serialTailTX[port] >= TX_BUFFER_SIZE) serialTailTX[port] = 0;
+            T_USB_Write (port,serialBufferTX[serialTailTX[port]][port]);
           }
-         break;
-        default:
-	    break;
-     }
+         
+     
    #endif
 }
 
@@ -156,7 +165,7 @@ void SerialOpen(uint8_t port, uint32_t baud) {
       case 3: UCSR3A  = (1<<U2X3); UBRR3H = h; UBRR3L = l; UCSR3B |= (1<<RXEN3)|(1<<TXEN3)|(1<<RXCIE3); break;
     #endif
     #if defined (ARDUINO_DUE)
-      case 0: Serial.begin(baud); break;
+      case 0: Serial.begin(baud);  break;
       case 1: Serial1.begin(baud); break;
       case 2: Serial2.begin(baud); break;
       case 3: Serial3.begin(baud); break;
@@ -289,5 +298,7 @@ void SerialSerialize(uint8_t port,uint8_t a) {
 }
 
 void SerialWrite(uint8_t port,uint8_t c){
-  SerialSerialize(port,c);UartSendData(port);
+
+ SerialSerialize(port,c);UartSendData(port);
+ 
 }
