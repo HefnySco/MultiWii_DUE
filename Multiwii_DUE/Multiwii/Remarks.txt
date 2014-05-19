@@ -1,0 +1,28 @@
+ 1=============
+ I2C Bus 100000KHz  makes a loop 4-5+ms
+ I2C Bus 400000KHz makes 1.5 ms only
+ 
+ 
+ 
+ 2==============
+ Hanges appears mostly because of the dead lock of handmade-symaphore for RX
+ 
+ 
+ 
+ 3===============
+ BARO LAMP
+ 1- baro mode never enterd
+ 2- either never set
+ 3- st.flag             = tmp; even when tmp =0 still the lamp turns on.
+ 4- When adjusting "RC Control Setting with SUX=H => BARO ... Debug variables worked correclty however:
+	1- I could not see BARO lamp working properly
+	2- when saving the settings the GUI said the response was wrong.
+	3- with version 2.3 I get error in ability to ARM, although the same everything arms in version 2.2
+	
+	
+	1- I changed the TX buffer size ... still not working !!!
+	now I am sure it is a protocol issue, but dont  know WHY.
+	2- Even when st.flag=0 still BARO is highlighted
+	
+	ISSUE is DATA ALIGNMENT .... solved from: http://forum.arduino.cc/index.php?topic=78026.0
+	adding __attribute__ ((packed))

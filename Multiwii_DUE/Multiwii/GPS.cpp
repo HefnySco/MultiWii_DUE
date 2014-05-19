@@ -89,7 +89,7 @@ LeadFilter yLeadFilter;      // Lat  GPS lag filter
 
 #endif
 
-  typedef struct PID_PARAM_ {
+  typedef struct __attribute__ ((packed)) PID_PARAM_ {
     float kP;
     float kI;
     float kD;
@@ -100,7 +100,7 @@ LeadFilter yLeadFilter;      // Lat  GPS lag filter
   PID_PARAM poshold_ratePID_PARAM;
   PID_PARAM navPID_PARAM;
 
-  typedef struct PID_ {
+  typedef struct __attribute__ ((packed)) PID_ {
     float   integrator; // integrator value
     int32_t last_input; // last input for derivative
     float   lastderivative; // last derivative for low-pass filter
@@ -1087,14 +1087,14 @@ bool GPS_newFrame(char c) {
 #endif //NMEA
 
 #if defined(UBLOX)
-  struct ubx_header {
+  struct __attribute__ ((packed)) ubx_header {
     uint8_t preamble1;
     uint8_t preamble2;
     uint8_t msg_class;
     uint8_t msg_id;
     uint16_t length;
   };
-  struct ubx_nav_posllh {
+  struct __attribute__ ((packed)) ubx_nav_posllh {
     uint32_t time;  // GPS msToW
     int32_t longitude;
     int32_t latitude;
@@ -1103,7 +1103,7 @@ bool GPS_newFrame(char c) {
     uint32_t horizontal_accuracy;
     uint32_t vertical_accuracy;
   };
-  struct ubx_nav_solution {
+  struct __attribute__ ((packed)) ubx_nav_solution {
     uint32_t time;
     int32_t time_nsec;
     int16_t week;
@@ -1122,7 +1122,7 @@ bool GPS_newFrame(char c) {
     uint8_t satellites;
     uint32_t res2;
   };
-  struct ubx_nav_velned {
+  struct __attribute__ ((packed)) ubx_nav_velned {
     uint32_t time;  // GPS msToW
     int32_t ned_north;
     int32_t ned_east;
@@ -1180,7 +1180,7 @@ bool GPS_newFrame(char c) {
   static uint8_t _fix_ok;
   
   // Receive buffer
-  static union {
+  static union __attribute__ ((packed)){
     ubx_nav_posllh posllh;
 //    ubx_nav_status status;
     ubx_nav_solution solution;
@@ -1285,7 +1285,7 @@ bool GPS_newFrame(char c) {
 
 #if defined(MTK_BINARY16) || defined(MTK_BINARY19)
 
-  struct diyd_mtk_msg {
+  struct __attribute__ ((packed)) diyd_mtk_msg {
         int32_t  latitude;
         int32_t  longitude;
         int32_t  altitude;
@@ -1333,7 +1333,7 @@ bool GPS_newFrame(char c) {
     bool  _offset_calculated;
 
     // Receive buffer
-    union {
+    union __attribute__ ((packed)) {
         diyd_mtk_msg  msg;
         uint8_t       bytes[];
     } _buffer;
@@ -1341,7 +1341,7 @@ bool GPS_newFrame(char c) {
 inline long _swapl(const void *bytes)
 {
     const uint8_t *b = (const uint8_t *)bytes;
-    union {
+    union __attribute__ ((packed)) {
         long    v;
         uint8_t b[4];
     } u;

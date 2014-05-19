@@ -33,7 +33,7 @@ void computeIMU () {
     for (axis = 0; axis < 3; axis++) {
       // empirical, we take a weighted value of the current and the previous values
       // /4 is to average 4 values, note: overflow is not possible for WMP gyro here
-      imu.gyroData[axis] = (imu.gyroADC[axis]*3+gyroADCprevious[axis])>>2;
+      imu.gyroData[axis] = (int16_t)((int16_t)imu.gyroADC[axis]*3+(int16_t)gyroADCprevious[axis])>>2;
       gyroADCprevious[axis] = imu.gyroADC[axis];
     }
   #else
@@ -58,8 +58,8 @@ void computeIMU () {
     for (axis = 0; axis < 3; axis++) {
       gyroADCinter[axis] =  imu.gyroADC[axis]+gyroADCinter[axis];
       // empirical, we take a weighted value of the current and the previous values
-      imu.gyroData[axis] = (gyroADCinter[axis]+gyroADCprevious[axis])/3;
-      gyroADCprevious[axis] = gyroADCinter[axis]>>1;
+      imu.gyroData[axis] = (int16_t) ((int16_t)gyroADCinter[axis]+(int16_t)gyroADCprevious[axis])/3;
+      gyroADCprevious[axis] = (int16_t) (gyroADCinter[axis]>>1);
       if (!ACC) imu.accADC[axis]=0;
     }
   #endif
@@ -114,18 +114,18 @@ void computeIMU () {
 #define GYR_CMPFM_FACTOR 8 // that means a CMP_FACTOR of 256 (2^8)
 
 
-typedef struct  {
+typedef struct  __attribute__ ((packed)) {
   int32_t X,Y,Z;
 } t_int32_t_vector_def;
 
-typedef struct  {
+typedef struct  __attribute__ ((packed)) {
   uint16_t XL; int16_t X;
   uint16_t YL; int16_t Y;
   uint16_t ZL; int16_t Z;
 } t_int16_t_vector_def;
 
 // note: we use implicit first 16 MSB bits 32 -> 16 cast. ie V32.X>>16 = V16.X
-typedef union {
+typedef union __attribute__ ((packed)){
   int32_t A32[3];
   t_int32_t_vector_def V32;
   int16_t A16[6];
@@ -134,7 +134,7 @@ typedef union {
 
 //return angle , unit: 1/10 degree
 int16_t _atan2(int32_t y, int32_t x){
-  float z = y;
+  FLOAT z = y;
   int16_t a;
   uint8_t c;
   c = abs(y) < abs(x);
@@ -152,13 +152,13 @@ int16_t _atan2(int32_t y, int32_t x){
   return a;
 }
 
-float InvSqrt (float x){ 
-  union{  
+FLOAT InvSqrt (FLOAT x){ 
+  union __attribute__ ((packed)) {  
     int32_t i;  
-    float   f; 
+    FLOAT   f; 
   } conv; 
   conv.f = x; 
-  conv.i = 0x5f3759df - (conv.i >> 1); 
+  conv.i = 0x5f3759df - (int32_t)(conv.i >> 1); 
   return 0.5f * (conv.f * (3.0f - x * conv.f * conv.f));
 }
 
@@ -218,11 +218,11 @@ static int16_t accZ=0;
 void getEstimatedAttitude(){
   uint8_t axis;
   int32_t accMag = 0;
-  float scale;
+  FLOAT  scale;
   int16_t deltaGyroAngle16[3];
   static t_int32_t_vector EstG,EstM;
   static uint32_t LPFAcc[3];
-  float invG; // 1/|G|
+  FLOAT invG; // 1/|G|
   static int16_t accZoffset = 0;
   int32_t accZ_tmp=0;
   static uint16_t previousT;
@@ -231,24 +231,35 @@ void getEstimatedAttitude(){
   // unit: radian per bit, scaled by 2^16 for further multiplication
   // with a delta time of 3000 us, and GYRO scale of most gyros, scale = a little bit less than 1
   scale = (currentT - previousT) * (GYRO_SCALE * 65536);
+  debug[3] = currentT - previousT;
   previousT = currentT;
 
   // Initialization
   for (axis = 0; axis < 3; axis++) {
     // valid as long as LPF_FACTOR is less than 15
-    imu.accSmooth[axis]  = LPFAcc[axis]>>ACC_LPF_FACTOR;
+    imu.accSmooth[axis]  = (int16_t)(LPFAcc[axis]>>ACC_LPF_FACTOR);
     LPFAcc[axis]      += imu.accADC[axis] - imu.accSmooth[axis];
     // used to calculate later the magnitude of acc vector
     accMag   += mul(imu.accSmooth[axis] , imu.accSmooth[axis]);
     // unit: radian scaled by 2^16
     // imu.gyroADC[axis] is 14 bit long, the scale factor ensure deltaGyroAngle16[axis] is still 14 bit long
-    deltaGyroAngle16[axis] = (imu.gyroADC[axis]  * scale);
+    #if !defined (ARDUINO_DUE)
+	deltaGyroAngle16[axis] = (int16_t) ((imu.gyroADC[axis]  * scale));
+	#else
+	deltaGyroAngle16[axis] = (int16_t) ((imu.gyroADC[axis]  *  scale));
+	#endif
   }
-
+  debug[0] = imu.gyroADC[0];
+  debug[1] = deltaGyroAngle16[0];
+  debug[2] = scale;
   // we rotate the intermediate 32 bit vector with the radian vector (deltaGyroAngle16), scaled by 2^16
   // however, only the first 16 MSB of the 32 bit vector is used to compute the result
   // it is ok to use this approximation as the 16 LSB are used only for the complementary filter part
   rotateV32(&EstG,deltaGyroAngle16);
+  
+  
+ 
+  
   #if MAG
     rotateV32(&EstM,deltaGyroAngle16);
   #endif
@@ -257,11 +268,11 @@ void getEstimatedAttitude(){
   // If accel magnitude >1.15G or <0.85G and ACC vector outside of the limit range => we neutralize the effect of accelerometers in the angle estimation.
   // To do that, we just skip filter, as EstV already rotated by Gyro
   for (axis = 0; axis < 3; axis++) {
-    if ( (int16_t)(0.85*ACC_1G*ACC_1G/256) < (int16_t)(accMag>>8) && (int16_t)(accMag>>8) < (int16_t)(1.15*ACC_1G*ACC_1G/256) )
-      EstG.A32[axis] += (int32_t)(imu.accSmooth[axis] - EstG.A16[2*axis+1])<<(16-GYR_CMPF_FACTOR);
+    if ( (int16_t)(0.85*ACC_1G*ACC_1G/256) < (int16_t)( (int32_t)accMag >>8) && (int16_t)((int32_t)accMag>>8) < (int16_t)(1.15*ACC_1G*ACC_1G/256) )
+      EstG.A32[axis] += (int32_t)((int32_t)(imu.accSmooth[axis] - EstG.A16[2*axis+1])<<(16-GYR_CMPF_FACTOR));
     accZ_tmp += mul(imu.accSmooth[axis] , EstG.A16[2*axis+1]);
     #if MAG
-      EstM.A32[axis]  += (int32_t)(imu.magADC[axis] - EstM.A16[2*axis+1])<<(16-GYR_CMPFM_FACTOR);
+      EstM.A32[axis]  += (int32_t)((int32_t)(imu.magADC[axis] - EstM.A16[2*axis+1])<<(16-GYR_CMPFM_FACTOR));
     #endif
   }
   
@@ -287,17 +298,17 @@ void getEstimatedAttitude(){
 
   #if defined(THROTTLE_ANGLE_CORRECTION)
     cosZ = mul(EstG.V16.Z , 100) / ACC_1G ;                                                   // cos(angleZ) * 100 
-    throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * constrain(100 - cosZ, 0, 100) >>3;  // 16 bit ok: 200*150 = 30000  
+    throttleAngleCorrection = THROTTLE_ANGLE_CORRECTION * (int16_t)(constrain(100 - cosZ, 0, 100) >>3);  // 16 bit ok: 200*150 = 30000  
   #endif
 
   // projection of ACC vector to global Z, with 1G subtructed
   // Math: accZ = A * G / |G| - 1G
   accZ = accZ_tmp *  invG;
   if (!f.ARMED) {
-    accZoffset -= accZoffset>>3;
+    accZoffset -= (int16_t)(accZoffset>>3);
     accZoffset += accZ;
   }  
-  accZ -= accZoffset>>3;
+  accZ -= (int16_t)(accZoffset>>3);
 }
 
 #define UPDATE_INTERVAL 25000    // 40hz update rate (20hz LPF on acc)
@@ -318,8 +329,8 @@ void getEstimatedAttitude(){
 #if BARO
 uint8_t getEstimatedAltitude(){
   int32_t  BaroAlt;
-  static float baroGroundTemperatureScale,logBaroGroundPressureSum;
-  static float vel = 0.0f;
+  static FLOAT baroGroundTemperatureScale,logBaroGroundPressureSum;
+  static FLOAT vel = 0.0f;
   static uint16_t previousT;
   uint16_t currentT = micros();
   uint16_t dTime;
@@ -338,12 +349,12 @@ uint8_t getEstimatedAltitude(){
   // see: https://code.google.com/p/ardupilot-mega/source/browse/libraries/AP_Baro/AP_Baro.cpp
   BaroAlt = ( logBaroGroundPressureSum - log(baroPressureSum) ) * baroGroundTemperatureScale;
 
-  alt.EstAlt = (alt.EstAlt * 6 + BaroAlt ) >> 3; // additional LPF to reduce baro noise (faster by 30 µs)
+  alt.EstAlt = (int32_t)((alt.EstAlt * 6 + BaroAlt ) >> 3); // additional LPF to reduce baro noise (faster by 30 µs)
   #if (defined(VARIOMETER) && (VARIOMETER != 2)) || !defined(SUPPRESS_BARO_ALTHOLD)
     //P
     int16_t error16 = constrain(AltHold - alt.EstAlt, -300, 300);
     applyDeadband(error16, 10); //remove small P parametr to reduce noise near zero position
-    BaroPID = constrain((conf.pid[PIDALT].P8 * error16 >>7), -150, +150);
+    BaroPID = constrain(conf.pid[PIDALT].P8 * (int16_t)(error16 >>7), -150, +150);
 
     //I
     errorAltitudeI += conf.pid[PIDALT].I8 * error16 >>6;
