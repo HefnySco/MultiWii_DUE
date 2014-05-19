@@ -250,10 +250,10 @@ void configureReceiver() {
   } else {
     cv = (cv - pwmLast[ch]); // / 42;
     if (cv>900 && cv<2200) {
-//	  while (INT_BLOCK);
-//	  INT_busy = true;
+	  while (INT_BLOCK);
+	  INT_busy = true;
       rcValue[ch] = cv;
-//	  INT_busy = false;
+	  INT_busy = false;
     }
   }
 }
@@ -475,7 +475,7 @@ uint16_t readRawRC(uint8_t chan) {
     oldSREG = SREG; 
 	cli(); // Let's disable interrupts
 #else
-	//while (INT_busy);
+	while (INT_busy);
 	INT_BLOCK = true;
 #endif
     data = rcValue[rcChannel[chan]]; // Let's copy the data Atomically

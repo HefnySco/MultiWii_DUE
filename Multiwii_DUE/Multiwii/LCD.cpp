@@ -887,7 +887,7 @@ static uint8_t reset_to_defaults;
 typedef void (*formatter_func_ptr)(void *, uint8_t, uint8_t);
 typedef void (*inc_func_ptr)(void *, int16_t);
 
-/*typedef*/struct __attribute__ ((packed)) lcd_type_desc_t {
+/*typedef*/struct lcd_type_desc_t {
   formatter_func_ptr fmt;
   inc_func_ptr inc;
 };
@@ -903,7 +903,7 @@ static lcd_type_desc_t LAUX2 = {&__uAuxFmt2, &__u16Inc};
 static lcd_type_desc_t LAUX3 = {&__uAuxFmt3, &__u16Inc};
 static lcd_type_desc_t LAUX4 = {&__uAuxFmt4, &__u16Inc};
 
-/*typedef*/struct __attribute__ ((packed)) lcd_param_def_t {
+/*typedef*/struct lcd_param_def_t {
   lcd_type_desc_t * type;
   uint8_t decimal;
   uint8_t multiplier;

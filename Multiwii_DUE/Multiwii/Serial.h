@@ -15,7 +15,6 @@
 #endif
 #define TX_BUFFER_SIZE 128
 
-
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus 

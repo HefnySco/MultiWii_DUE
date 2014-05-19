@@ -901,7 +901,7 @@ void initializeServo() {
    // Arduino Init
   #endif
 
-  #if defined(SERVO_1_HIGH) 7& !defined (ARDUINO_DUE)
+  #if defined(SERVO_1_HIGH)
     #if defined(PROMINI) || (defined(PROMICRO) && defined(HWPWM6)) // uses timer 0 Comperator A (8 bit)
       TCCR0A = 0; // normal counting mode
       TIMSK0 |= (1<<OCIE0A); // Enable CTC interrupt
@@ -1145,7 +1145,7 @@ void initializeServo() {
   
   #endif // DUE hw pwm
   
-
+  #endif
 }
 
 /**************************************************************************************/
@@ -1241,7 +1241,7 @@ void initializeServo() {
   } 
   #endif
 #endif
-#endif
+
 /**************************************************************************************/
 /************             Motor software PWM generation              ******************/
 /**************************************************************************************/

@@ -14,5 +14,4 @@ cause:
 	2- Bad Gyro initialization due to different I2C or timing issue.
 	
 		
-3- I converted float to FLOAT to make sure I use float32
-
+	

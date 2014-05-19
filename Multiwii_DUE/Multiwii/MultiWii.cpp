@@ -987,7 +987,7 @@ void loop () {
       auxState |= (rcData[AUX1+i]<1300)<<(3*i) | (1300<rcData[AUX1+i] && rcData[AUX1+i]<1700)<<(3*i+1) | (rcData[AUX1+i]>1700)<<(3*i+2);
     for(i=0;i<CHECKBOXITEMS;i++)
       rcOptions[i] = (auxState & conf.activate[i])>0;
-		
+
     // note: if FAILSAFE is disable, failsafeCnt > 5*FAILSAFE_DELAY is always false
     #if ACC
       if ( rcOptions[BOXANGLE] || (failsafeCnt > 5*FAILSAFE_DELAY) ) { 
@@ -1021,7 +1021,6 @@ void loop () {
         if (rcOptions[BOXBARO]) {
           if (!f.BARO_MODE) {
             f.BARO_MODE = 1;
-			
             AltHold = alt.EstAlt;
             #if defined(ALT_HOLD_THROTTLE_MIDPOINT)
               initialThrottleHold = ALT_HOLD_THROTTLE_MIDPOINT;
@@ -1033,7 +1032,6 @@ void loop () {
           }
         } else {
           f.BARO_MODE = 0;
-		 
         }
       #endif
       #ifdef VARIOMETER
@@ -1172,6 +1170,7 @@ void loop () {
   currentTime = micros();
   cycleTime = currentTime - previousTime;
   previousTime = currentTime;
+
   //***********************************
   //**** Experimental FlightModes *****
   //***********************************

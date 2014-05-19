@@ -136,14 +136,22 @@
 
 
 #if defined (ARDUINO_DUE)
-#define FLOAT float32_t
-// check pgmspace.h in avr .... they are not  used in STM
-#include <avr/pgmspace.h>
-#define ARM_MATH_CM3
-#include "arm_math.h"
-#else
 
-#define FLOAT float
+// check pgmspace.h in avr .... they are not  used in STM
+#undef PROGMEM
+#define PROGMEM 	
+
+#undef  PGM_P
+#define PGM_P const char *
+
+
+#undef  PGM_VOID_P
+#define PGM_VOID_P const void *
+
+#undef  pgm_read_byte(address_short)   
+#define pgm_read_byte(address_short)    ((char *)(address_short))[0]
+
+
 #endif
 
 /**************************************************************************************/
@@ -681,11 +689,11 @@
   #endif
   //RX PIN assignment inside the port //for PORTK
   //SET YOUR PINS! TO MATCH RECIEVER CHANNELS
-#define CHAN1PIN 62 // Motor 1
-#define CHAN2PIN 63 // Motor 2
-#define CHAN3PIN 64 // Motor 3
-#define CHAN4PIN 65 // Motor 4 
-#define CHAN5PIN 66 // Motor 5
+#define CHAN1PIN 62
+#define CHAN2PIN 63
+#define CHAN3PIN 64
+#define CHAN4PIN 65
+#define CHAN5PIN 66
 #define CHAN6PIN 67 //not used at the moment
 #define CHAN7PIN 50 //not used at the moment
 #define CHAN8PIN 51 //not used at the moment
@@ -707,7 +715,7 @@
   #define PCIR_PORT_BIT              (1<<2)
   #define RX_PC_INTERRUPT            PCINT2_vect
   #define RX_PCINT_PIN_PORT          PINK
-  /*
+  
   #define SERVO_1_PINMODE            pinMode(34,OUTPUT);pinMode(44,OUTPUT); // TILT_PITCH - WING left
   #define SERVO_1_PIN_HIGH           PORTC |= 1<<3;PORTL |= 1<<5;
   #define SERVO_1_PIN_LOW            PORTC &= ~(1<<3);PORTL &= ~(1<<5);
@@ -732,7 +740,6 @@
   #define SERVO_8_PINMODE            pinMode(3,OUTPUT);                      // new
   #define SERVO_8_PIN_HIGH           PORTE |= 1<<5;
   #define SERVO_8_PIN_LOW            PORTE &= ~(1<<5);
-  */
 #endif
 
 
