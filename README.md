@@ -14,7 +14,7 @@ CPU Clock at 84Mhz.
 Challenges for DUE
 ==================
 
-1- Unlike ancessor Arduino boards, you do not have EEPROM here so you canot easily store your settings which is essential for flying.
+1- Unlike predessesors Arduino boards, you do not have EEPROM here so you canot easily store your settings which is essential for flying.
 
    I saw this issue solved for the first time for me in Naze32, they used flash memory as EEPROM, so I made some google search and found similar library for Arduino DUE, I made minor tweeks for it and it works well.
 
