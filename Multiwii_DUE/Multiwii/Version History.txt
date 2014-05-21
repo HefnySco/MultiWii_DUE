@@ -47,3 +47,9 @@ The issue was due to the cycle time that is used to calculate deltaGyro was uint
 it should be int32_t as in the main cycle of the Multiwii.cpp
 uint16_t currentT = micros();
 anyhow I added a #if define to allow this type of change.
+
+
+version 0.0.1.8
+Date 20 May 2014
+Description: You can fly using QuadP,X & TRI
+

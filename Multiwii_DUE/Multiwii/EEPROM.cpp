@@ -16,7 +16,7 @@
 #include "Alarms.h"
 #include "GPS.h"
 
-bool debug_write = false;
+
 #if defined (ARDUINO_DUE)
 
 // Storage Buffer
@@ -36,7 +36,7 @@ void eeprom_read_block (void *__dst, const void *__src, unsigned int __n)
 		//Serial.write(" - ");
 		//Serial.print(((char*)__src)[i],HEX);
 		//Serial.write ("\r\n");
-		delayMicroseconds(200);
+		//delayMicroseconds(200);
 		((char*)__dst)[i]= ((char*)__src)[i];
 	}
 
@@ -133,6 +133,9 @@ bool readEEPROM() {
     return false;                   // defaults loaded, don't reload constants (EEPROM life saving)
   }
   // 500/128 = 3.90625    3.9062 * 3.9062 = 15.259   1526*100/128 = 1192
+  ///MHefny
+  
+  //conf.minthrottle = MINTHROTTLE;
   for(i=0;i<5;i++) {
     lookupPitchRollRC[i] = (1526+conf.rcExpo8*(i*i-15))*i*(int32_t)conf.rcRate8/1192;
   }
@@ -186,7 +189,7 @@ void writeParams(uint8_t b) {
  #else
   eeprom_write_block((const void*)&conf, (void*)(global_conf.currentSet * sizeof(conf) + sizeof(global_conf)), sizeof(conf));
  #endif
-  debug_write = true; 
+ 
   readEEPROM();
   if (b == 1) blinkLED(15,20,1);
   #if defined(BUZZER)

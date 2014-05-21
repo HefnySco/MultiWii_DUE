@@ -373,10 +373,13 @@ void annexCode() { // this code is excetuted at each loop and won't interfere wi
     }
     if (rcData[axis]<MIDRC) rcCommand[axis] = -rcCommand[axis];
   }
+  
+  
   tmp = constrain(rcData[THROTTLE],MINCHECK,2000);
   tmp = (uint32_t)(tmp-MINCHECK)*2559/(2000-MINCHECK); // [MINCHECK;2000] -> [0;2559]
   tmp2 = tmp/256; // range [0;9]
   rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp-tmp2*256) * (lookupThrottleRC[tmp2+1]-lookupThrottleRC[tmp2]) / 256; // [0;2559] -> expo -> [conf.minthrottle;MAXTHROTTLE]
+
 
   if(f.HEADFREE_MODE) { //to optimize
     float radDiff = (att.heading - headFreeModeHold) * 0.0174533f; // where PI/180 ~= 0.0174533
@@ -589,15 +592,7 @@ void setup() {
   STABLEPIN_PINMODE;
   POWERPIN_OFF;
   initOutput();
-  /*////DUMMY START
-  int dum;
-  for (dum=0;dum<3;++dum)
-  {
-	global_conf.accZero[dum] = dum * 2 + 1;
-	global_conf.magZero[dum] = dum * 20 + 3;
-  }
-  writeGlobalSet(1);
-  ///DUMMY END*/
+  
   readGlobalSet();
   #ifndef NO_FLASH_CHECK
     #if defined(MEGA)
