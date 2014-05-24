@@ -30,7 +30,7 @@
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus 
-#include <include/twi.h>
+#include "twi.h"
 #ifdef __cplusplus
 }
 #endif // __cplusplus 

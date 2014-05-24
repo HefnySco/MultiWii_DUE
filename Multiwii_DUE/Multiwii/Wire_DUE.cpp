@@ -44,7 +44,7 @@ static inline bool TWI_WaitTransferComplete(Twi *_twi, uint32_t _timeout) {
 }
 
 static inline bool TWI_WaitByteSent(Twi *_twi, uint32_t _timeout) {
-	while (!TWI_ByteSent(_twi)) {
+	while (!((pTwi->TWI_SR & TWI_SR_TXRDY) == TWI_SR_TXRDY)) { //TWI_ByteSent(_twi)) {
 		if (TWI_FailedAcknowledge(_twi))
 			return false;
 		if (--_timeout == 0)
@@ -128,10 +128,10 @@ uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop
 	do {
 		// Stop condition must be set during the reception of last byte
 		if (readed + 1 == quantity)
-			TWI_SendSTOPCondition( twi);
+			twi->TWI_CR |= TWI_CR_STOP; //TWI_SendSTOPCondition( twi);
 
 		TWI_WaitByteReceived(twi, RECV_TIMEOUT);
-		rxBuffer[readed++] = TWI_ReadByte(twi);
+		rxBuffer[readed++] = twi->TWI_RHR; //TWI_ReadByte(twi);
 	} while (readed < quantity);
 	TWI_WaitTransferComplete(twi, RECV_TIMEOUT);
 
@@ -185,10 +185,13 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop) {
 	TWI_WaitByteSent(twi, XMIT_TIMEOUT);
 	int sent = 1;
 	while (sent < txBufferLength) {
-		TWI_WriteByte(twi, txBuffer[sent++]);
+		//TWI_WriteByte(twi, );
+		twi->TWI_THR = txBuffer[sent++];
 		TWI_WaitByteSent(twi, XMIT_TIMEOUT);
 	}
-	TWI_Stop( twi);
+	//TWI_Stop( twi);
+	twi->TWI_CR = TWI_CR_STOP;
+	
 	TWI_WaitTransferComplete(twi, XMIT_TIMEOUT);
 
 	// empty buffer
@@ -268,7 +271,7 @@ void TwoWire::onRequest(void(*function)(void)) {
 
 void TwoWire::onService(void) {
 	// Retrieve interrupt status
-	uint32_t sr = TWI_GetStatus(twi);
+	uint32_t sr = twi->TWI_SR; //TWI_GetStatus(twi);
 
 	if (status == SLAVE_IDLE && TWI_STATUS_SVACC(sr)) {
 		TWI_DisableIt(twi, TWI_IDR_SVACC);
@@ -320,7 +323,7 @@ void TwoWire::onService(void) {
 	if (status == SLAVE_RECV) {
 		if (TWI_STATUS_RXRDY(sr)) {
 			if (srvBufferLength < BUFFER_LENGTH)
-				srvBuffer[srvBufferLength++] = TWI_ReadByte(twi);
+				srvBuffer[srvBufferLength++] = twi->TWI_RHR; // TWI_ReadByte(twi);
 		}
 	}
 
@@ -329,7 +332,9 @@ void TwoWire::onService(void) {
 			uint8_t c = 'x';
 			if (srvBufferIndex < srvBufferLength)
 				c = srvBuffer[srvBufferIndex++];
-			TWI_WriteByte(twi, c);
+			//TWI_WriteByte(twi, c);
+			twi->TWI_THR = c;
+		
 		}
 	}
 }
