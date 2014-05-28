@@ -53,3 +53,6 @@ version 0.0.1.8
 Date 20 May 2014
 Description: You can fly using QuadP,X & TRI
 
+version 0.0.1.9
+Date 29 May 2014
+Description: Fix TWI resulted in compile problem on AVR.

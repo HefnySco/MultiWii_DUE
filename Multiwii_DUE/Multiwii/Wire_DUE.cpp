@@ -44,7 +44,7 @@ static inline bool TWI_WaitTransferComplete(Twi *_twi, uint32_t _timeout) {
 }
 
 static inline bool TWI_WaitByteSent(Twi *_twi, uint32_t _timeout) {
-	while (!((pTwi->TWI_SR & TWI_SR_TXRDY) == TWI_SR_TXRDY)) { //TWI_ByteSent(_twi)) {
+	while (!((_twi->TWI_SR & TWI_SR_TXRDY) == TWI_SR_TXRDY)) { //TWI_ByteSent(_twi)) {
 		if (TWI_FailedAcknowledge(_twi))
 			return false;
 		if (--_timeout == 0)

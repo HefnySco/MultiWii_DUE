@@ -74,6 +74,9 @@
  *
  */
 
+ #include "config.h"
+#include "def.h"
+#if defined(ARDUINO_DUE)
 /*----------------------------------------------------------------------------
  *        Headers
  *----------------------------------------------------------------------------*/
@@ -378,3 +381,4 @@ void TWI_SendSTOPCondition(Twi *pTwi)
     pTwi->TWI_CR |= TWI_CR_STOP;
 }
 
+#endif
