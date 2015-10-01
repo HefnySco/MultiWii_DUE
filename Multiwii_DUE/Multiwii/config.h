@@ -35,7 +35,7 @@
     //#define GIMBAL
     //#define BI
     //#define TRI
-    //#define QUADP
+    #define QUADP
     //#define QUADX
     //#define Y4
     //#define Y6
@@ -163,7 +163,7 @@
       //#define ITG3200
       //#define MPU3050
       //#define L3G4200D
-      //#define MPU6050       //combo + ACC
+      #define MPU6050       //combo + ACC
       //#define LSM330        //combo + ACC
       
       /* I2C accelerometer */
